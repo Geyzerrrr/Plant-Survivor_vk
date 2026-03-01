@@ -7,13 +7,39 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- VK Bridge для интеграции с VK Mini Apps -->
+    <!-- VK Bridge -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     
     <style>
-        /* ... существующие стили ... */
+        /* ВАШИ СУЩЕСТВУЮЩИЕ СТИЛИ - Я ИХ НЕ МЕНЯЮ, ПРОСТО ВСТАВЛЯЮ ВАШИ */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        }
         
-        /* Добавить в конец */
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .app-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            min-height: 600px;
+            position: relative;
+        }
+        
+        /* КНОПКА НАЗАД */
         .vk-back-button {
             position: absolute;
             top: 10px;
@@ -25,139 +51,1601 @@
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 8px;
             font-family: 'Nunito', sans-serif;
             font-size: 14px;
             backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .vk-back-button.visible {
+            display: flex;
+        }
+        
+        /* ЭКРАНЫ */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 30px 20px;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            overflow-y: auto;
+        }
+        
+        .screen.hidden {
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .screen.active {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        /* ЭКРАН ЗАГРУЗКИ */
+        #loading-screen {
+            background: linear-gradient(135deg, #283593 0%, #1a237e 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .logo-container {
+            margin-bottom: 40px;
+        }
+        
+        .logo-svg {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .logo-svg .plant-emoji {
+            font-size: 90px;
+            animation: gentleFloat 3s infinite ease-in-out;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+        
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        h1 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .loader-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .loader-bar {
+            width: 100%;
+            max-width: 280px;
+            height: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 0 auto 15px;
+        }
+        
+        .loader-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #29b6f6, #0288d1);
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+        
+        .loader-text {
+            font-size: 14px;
+            font-style: italic;
+            opacity: 0.8;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .loading-stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #29b6f6;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        /* ОБЩИЕ СТИЛИ ДЛЯ ЭКРАНОВ ВОПРОСОВ */
+        .question-screen {
+            background: white;
+            color: #1a237e;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-top: 10px;
+        }
+        
+        .progress-container {
+            flex: 1;
+            margin-right: 20px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            width: 33.33%;
+            background: linear-gradient(90deg, #29b6f6, #0288d1);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .question-counter {
+            font-size: 24px;
+            font-weight: 800;
+            color: #283593;
+            min-width: 50px;
+        }
+        
+        .question-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .question-title {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 22px;
+            color: #1a237e;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .question-hint {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            font-style: italic;
+        }
+        
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+        
+        .option-btn {
+            background: #e3f2fd;
+            border: 2px solid #bbdefb;
+            padding: 18px 16px;
+            border-radius: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            color: #1a237e;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .option-btn:hover {
+            background: #bbdefb;
+            transform: translateY(-2px);
+        }
+        
+        .option-btn.selected {
+            background: #2196f3;
+            color: white;
+            border-color: #1565c0;
+            box-shadow: 0 4px 15px rgba(33,150,243,0.3);
+        }
+        
+        .option-btn.selected .option-emoji {
+            transform: scale(1.2);
+        }
+        
+        .option-emoji {
+            font-size: 28px;
+            min-width: 40px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .option-text {
+            flex: 1;
+            line-height: 1.4;
+        }
+        
+        /* ЭКРАН ОБРАБОТКИ */
+        #processing-screen {
+            background: linear-gradient(135deg, #283593 0%, #1a237e 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .processing-logo {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .processing-logo .microscope-emoji {
+            font-size: 90px;
+            animation: searchPulse 1.5s infinite ease-in-out;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+            transform-origin: center center;
+        }
+        
+        @keyframes searchPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.8; }
+        }
+        
+        .processing-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+        
+        .processing-loader {
+            width: 100%;
+            max-width: 280px;
+            margin: 30px auto;
+        }
+        
+        .processing-bar {
+            height: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .processing-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #29b6f6, #0288d1);
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+        
+        .processing-text {
+            font-size: 14px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+        
+        .processing-steps {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 280px;
+            margin: 30px auto 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 15px;
+            opacity: 0.5;
+            text-align: left;
+        }
+        
+        .step.active { 
+            opacity: 1; 
+            color: #29b6f6;
+        }
+        
+        .step i { 
+            width: 24px; 
+            text-align: center; 
+        }
+        
+        /* ЭКРАН РЕЗУЛЬТАТОВ */
+        #results-screen {
+            background: white;
+            padding: 30px 20px;
+            overflow-y: auto;
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .results-logo {
+            font-size: 60px;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .results-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .results-container {
+            margin-bottom: 30px;
+        }
+        
+        .result-card {
+            border: 3px solid #1565c0;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .result-card.warning {
+            border-color: #f57c00;
+            background: #fff3e0;
+        }
+        
+        .result-card.winter {
+            border-color: #29b6f6;
+            background: #e3f2fd;
+        }
+        
+        .result-card.succulent {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+        
+        .result-card.orchid {
+            border-color: #9c27b0;
+            background: #f3e5f5;
+        }
+        
+        .result-card.citrus {
+            border-color: #ff9800;
+            background: #fff3e0;
+        }
+        
+        .result-title {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #1a237e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .result-title i {
+            color: #283593;
+        }
+        
+        .fertilizer-schedule {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .fertilizer-schedule h4 {
+            color: #1a237e;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .fertilizer-schedule p {
+            color: #424242;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .fertilizer-schedule strong {
+            color: #1565c0;
+        }
+        
+        .dosage-info {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 3px solid #4caf50;
+            font-size: 14px;
+            color: #2e7d32;
+        }
+        
+        .dosage-info strong {
+            color: #1b5e20;
+        }
+        
+        .warning-note {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid #f44336;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #c62828;
+        }
+        
+        .funny-note {
+            font-style: italic;
+            font-size: 14px;
+            color: #5d4037;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff3e0;
+            border-radius: 8px;
+            border-left: 3px solid #ff9800;
+            line-height: 1.5;
+        }
+        
+        /* КНОПКИ ШЕРИНГА */
+        .share-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #bbdefb;
+            text-align: center;
+        }
+        
+        .share-section h3 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            color: #1a237e;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .share-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        
+        .share-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.3s;
         }
         
-        .vk-back-button:hover {
-            background: rgba(26, 35, 126, 0.3);
+        .share-btn:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .share-btn.vk { 
+            background: #4C75A3; 
+            box-shadow: 0 4px 12px rgba(76, 117, 163, 0.3);
+        }
+        
+        .share-btn.tg { 
+            background: #0088cc; 
+            box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
+        }
+        
+        .share-note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .bot-link {
+            display: inline-block;
+            background: #2196f3;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .bot-link:hover {
+            background: #1565c0;
+            transform: translateY(-2px);
+        }
+        
+        /* КНОПКИ ДЕЙСТВИЙ */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 30px;
+        }
+        
+        .btn-restart {
+            padding: 16px;
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255,152,0,0.4);
+        }
+        
+        .btn-channel {
+            padding: 16px;
+            background: linear-gradient(135deg, #0088cc, #006699);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-channel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,136,204,0.4);
+        }
+        
+        /* АДАПТАЦИЯ */
+        @media (max-width: 400px) {
+            .app-container {
+                border-radius: 16px;
+            }
+            
+            .screen {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+            
+            .question-title {
+                font-size: 20px;
+            }
+            
+            .option-btn {
+                padding: 16px 14px;
+                font-size: 15px;
+            }
+            
+            .result-title {
+                font-size: 18px;
+            }
+            
+            .logo-svg .plant-emoji,
+            .processing-logo .microscope-emoji {
+                font-size: 70px;
+            }
+            
+            .share-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            
+            .vk-back-button {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
-    <script>
-    // Инициализация VK Mini App
-    try {
-        vkBridge.send('VKWebAppInit');
-        console.log('VK Mini App инициализирован');
-    } catch (e) {
-        console.log('Не в VK окружении');
-    }
-    </script>
-
     <div class="app-container">
         <!-- Кнопка назад для VK -->
-        <button class="vk-back-button" id="vk-back-button" style="display: none;">
+        <button class="vk-back-button" id="vk-back-button">
             <i class="fas fa-arrow-left"></i> Назад
         </button>
         
-        <!-- ... все существующие экраны ... -->
+        <!-- ЭКРАН 1: ЗАГРУЗКА -->
+        <div class="screen active" id="loading-screen">
+            <div class="logo-container">
+                <div class="logo-svg">
+                    <div class="plant-emoji">🧪</div>
+                </div>
+                <h1>Удобрятор</h1>
+                <div class="loader-subtitle">Давайте накормим ваши растения</div>
+            </div>
+            
+            <div class="loader-bar">
+                <div class="loader-progress" id="loader-progress"></div>
+            </div>
+            <div class="loader-text" id="loader-status">Собираемся с мыслями...</div>
+            
+            <div class="loading-stats">
+                <div style="text-align: center;">
+                    <span class="stat-number">25</span>
+                    <span class="stat-label">удобрений</span>
+                </div>
+                <div style="text-align: center;">
+                    <span class="stat-number">3</span>
+                    <span class="stat-label">вопроса</span>
+                </div>
+                <div style="text-align: center;">
+                    <span class="stat-number">7</span>
+                    <span class="stat-label">типов растений</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ЭКРАН 2: ВОПРОС 1 -->
+        <div class="screen question-screen hidden" id="question-1-screen">
+            <div class="question-header">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 33.33%"></div>
+                    </div>
+                    <div class="progress-text">Вопрос 1/3</div>
+                </div>
+                <div class="question-counter">1/3</div>
+            </div>
+            
+            <div class="question-content">
+                <h2 class="question-title">КАКОЙ ТИП РАСТЕНИЯ БУДЕМ КОРМИТЬ?</h2>
+                <p class="question-hint">Каждому растению — своё меню</p>
+                
+                <div class="options-container">
+                    <button class="option-btn" data-value="цветущее">
+                        <span class="option-emoji">🌸</span>
+                        <span class="option-text">Цветущие растения</span>
+                    </button>
+                    <button class="option-btn" data-value="декоративнолиственное">
+                        <span class="option-emoji">🌿</span>
+                        <span class="option-text">Декоративно-лиственные</span>
+                    </button>
+                    <button class="option-btn" data-value="кактусы">
+                        <span class="option-emoji">🌵</span>
+                        <span class="option-text">Кактусы и суккуленты</span>
+                    </button>
+                    <button class="option-btn" data-value="орхидеи">
+                        <span class="option-emoji">🦋</span>
+                        <span class="option-text">Орхидеи</span>
+                    </button>
+                    <button class="option-btn" data-value="зелень">
+                        <span class="option-emoji">🥬</span>
+                        <span class="option-text">Зелень и травы</span>
+                    </button>
+                    <button class="option-btn" data-value="пальмы">
+                        <span class="option-emoji">🌴</span>
+                        <span class="option-text">Пальмы и драцены</span>
+                    </button>
+                    <button class="option-btn" data-value="цитрусовые">
+                        <span class="option-emoji">🍋</span>
+                        <span class="option-text">Цитрусовые </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ЭКРАН 3: ВОПРОС 2 -->
+        <div class="screen question-screen hidden" id="question-2-screen">
+            <div class="question-header">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 66.66%"></div>
+                    </div>
+                    <div class="progress-text">Вопрос 2/3</div>
+                </div>
+                <div class="question-counter">2/3</div>
+            </div>
+            
+            <div class="question-content">
+                <h2 class="question-title">ЧЕГО ХОТИМ ДОБИТЬСЯ?</h2>
+                <p class="question-hint">Выберите основную цель</p>
+                
+                <div class="options-container">
+                    <button class="option-btn" data-value="рост">
+                        <span class="option-emoji">📈</span>
+                        <span class="option-text">Ускорить рост — Больше новых листьев</span>
+                    </button>
+                    <button class="option-btn" data-value="цветение">
+                        <span class="option-emoji">🌺</span>
+                        <span class="option-text">Заставить цвести — Больше бутонов</span>
+                    </button>
+                    <button class="option-btn" data-value="корни">
+                        <span class="option-emoji">🦠</span>
+                        <span class="option-text">Укрепить корни — После пересадки</span>
+                    </button>
+                    <button class="option-btn" data-value="иммунитет">
+                        <span class="option-emoji">🛡️</span>
+                        <span class="option-text">Поднять иммунитет — Стимуляторы</span>
+                    </button>
+                    <button class="option-btn" data-value="листья">
+                        <span class="option-emoji">🍃</span>
+                        <span class="option-text">Улучшить листья — Блеск, против хлороза</span>
+                    </button>
+                    <button class="option-btn" data-value="здоровье">
+                        <span class="option-emoji">💚</span>
+                        <span class="option-text">Общее здоровье — Комплексный уход</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ЭКРАН 4: ВОПРОС 3 -->
+        <div class="screen question-screen hidden" id="question-3-screen">
+            <div class="question-header">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%"></div>
+                    </div>
+                    <div class="progress-text">Вопрос 3/3</div>
+                </div>
+                <div class="question-counter">3/3</div>
+            </div>
+            
+            <div class="question-content">
+                <h2 class="question-title">КАКОЕ СЕЙЧАС ВРЕМЯ ГОДА?</h2>
+                <p class="question-hint">Влияет на частоту подкормок</p>
+                
+                <div class="options-container">
+                    <button class="option-btn" data-value="весна">
+                        <span class="option-emoji">🌱</span>
+                        <span class="option-text">Весна — Март-май</span>
+                    </button>
+                    <button class="option-btn" data-value="лето">
+                        <span class="option-emoji">☀️</span>
+                        <span class="option-text">Лето — Июнь-август</span>
+                    </button>
+                    <button class="option-btn" data-value="осень">
+                        <span class="option-emoji">🍂</span>
+                        <span class="option-text">Осень — Сентябрь-ноябрь</span>
+                    </button>
+                    <button class="option-btn" data-value="зима">
+                        <span class="option-emoji">❄️</span>
+                        <span class="option-text">Зима — Декабрь-февраль</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ЭКРАН 5: ОБРАБОТКА -->
+        <div class="screen hidden" id="processing-screen">
+            <div class="processing-logo">
+                <div class="microscope-emoji">🔬</div>
+            </div>
+            
+            <h2>Анализируем ваши ответы...</h2>
+            <p class="processing-subtitle">Подбираем оптимальную схему</p>
+            
+            <div class="processing-loader">
+                <div class="processing-bar">
+                    <div class="processing-progress" id="processing-progress"></div>
+                </div>
+                <div class="processing-text" id="processing-status">Рассчитываем дозировки...</div>
+            </div>
+            
+            <div class="processing-steps">
+                <div class="step" id="step1">
+                    <i class="fas fa-check"></i>
+                    <span>Анализ потребностей</span>
+                </div>
+                <div class="step" id="step2">
+                    <i class="fas fa-check"></i>
+                    <span>Подбор удобрений</span>
+                </div>
+                <div class="step" id="step3">
+                    <i class="fas fa-check"></i>
+                    <span>Расчет дозировок</span>
+                </div>
+                <div class="step" id="step4">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Формирование графика</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ЭКРАН 6: РЕЗУЛЬТАТЫ -->
+        <div class="screen hidden" id="results-screen">
+            <div class="results-header">
+                <div class="results-logo">📋</div>
+                <h2>Ваша схема подкормки!</h2>
+                <p class="results-subtitle">Вот что мы рекомендуем</p>
+            </div>
+            
+            <div class="results-container" id="results-container">
+                <!-- Результаты будут вставлены сюда -->
+            </div>
+            
+            <div class="share-section">
+                <h3><i class="fas fa-share-alt"></i> Поделиться схемой</h3>
+                <div class="share-buttons">
+                    <button class="share-btn vk" id="share-vk">
+                        <i class="fab fa-vk"></i>
+                    </button>
+                    <button class="share-btn tg" id="share-tg">
+                        <i class="fab fa-telegram"></i>
+                    </button>
+                </div>
+                <p class="share-note">Тест доступен в Telegram мини-приложении:</p>
+                <a href="https://t.me/PlantSurvivorbot/test" target="_blank" class="bot-link">
+                    <i class="fab fa-telegram"></i> Удобрятор Mini App
+                </a>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn-restart" id="restart-btn">
+                    <i class="fas fa-redo"></i> Создать новую схему
+                </button>
+                <a href="https://t.me/geyzerrr_A" target="_blank" class="btn-channel">
+                    <i class="fab fa-telegram"></i> Создано @geyzerrr
+                </a>
+            </div>
+        </div>
     </div>
     
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // VK Back Button
-        const vkBackButton = document.getElementById('vk-back-button');
-        
-        try {
-            if (vkBridge && window.location !== window.parent.location) {
-                vkBackButton.style.display = 'flex';
-                
-                vkBackButton.addEventListener('click', function() {
-                    vkBridge.send('VKWebAppClose', { status: 'success' });
-                });
-            }
-        } catch (e) {}
-        
-        // ... остальной существующий код ...
-        
-        // Модифицируем функцию shareResult для поддержки VK
-        const originalShareResult = shareResult;
-        window.shareResult = function(platform) {
-            const appUrl = 'https://t.me/PlantSurvivorbot/test'; // для Telegram
-            const vkAppUrl = 'https://vk.com/app54467162'; // ЗАМЕНИТЕ на ID вашего приложения
-            
-            const getPlantTypeName = (type) => {
-                const names = {
-                    'цветущее': 'Цветущие растения',
-                    'декоративнолиственное': 'Декоративно-лиственные',
-                    'кактусы': 'Кактусы и суккуленты',
-                    'орхидеи': 'Орхидеи',
-                    'зелень': 'Зелень и травы',
-                    'пальмы': 'Пальмы и драцены',
-                    'цитрусовые': 'Цитрусовые'
-                };
-                return names[type] || type;
-            };
-            
-            const getGoalName = (goal) => {
-                const names = {
-                    'рост': 'Для роста',
-                    'цветение': 'Для цветения',
-                    'корни': 'Для корней',
-                    'иммунитет': 'Для иммунитета',
-                    'листья': 'Для листьев',
-                    'здоровье': 'Для общего здоровья'
-                };
-                return names[goal] || goal;
-            };
-            
-            const getSeasonName = (season) => {
-                const names = {
-                    'весна': 'Весна',
-                    'лето': 'Лето',
-                    'осень': 'Осень',
-                    'зима': 'Зима'
-                };
-                return names[season] || season;
-            };
-            
-            const fertilizers = FERTILIZERS[userAnswers.plantType]?.[userAnswers.goal] || 
-                               [{name: "Универсальное удобрение", dosage: "1 мл на 1 л воды", method: "под корень"}];
-            const fertilizer = fertilizers[0];
-            
-            const shareText = `🧪 Удобрятор подобрал мне схему подкормки!\n\n` +
-                           `🌿 ${getPlantTypeName(userAnswers.plantType)}\n` +
-                           `🎯 ${getGoalName(userAnswers.goal)}\n` +
-                           `📅 ${getSeasonName(userAnswers.season)}\n` +
-                           `💧 ${fertilizer.name}: ${fertilizer.dosage}\n\n` +
-                           `Составь свою схему! 👇\n`;
-            
-            let shareUrl = '';
-            
-            if (platform === 'vk') {
-                shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Удобрятор&description=${encodeURIComponent(shareText)}&noparse=true`;
-            } else if (platform === 'telegram') {
-                shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(shareText + appUrl)}`;
-            }
-            
-            if (shareUrl) {
-                try {
-                    vkBridge.send('VKWebAppShowShareBox', {
-                        text: shareText,
-                        link: platform === 'vk' ? vkAppUrl : appUrl
-                    }).catch(() => {
-                        // Fallback: открываем в новом окне
-                        const width = 600;
-                        const height = 500;
-                        const left = (window.innerWidth - width) / 2;
-                        const top = (window.innerHeight - height) / 2;
-                        window.open(shareUrl, '_blank', `width=${width},height=${height},top=${top},left=${left}`);
-                    });
-                } catch (e) {
-                    window.open(shareUrl, '_blank');
+        // ИНИЦИАЛИЗАЦИЯ VK
+        (function initVK() {
+            try {
+                if (typeof vkBridge !== 'undefined') {
+                    vkBridge.send('VKWebAppInit')
+                        .then(() => {
+                            console.log('✅ VK Mini App готов');
+                            // Показываем кнопку назад, если мы внутри VK
+                            if (window.location !== window.parent.location) {
+                                document.getElementById('vk-back-button').classList.add('visible');
+                            }
+                        })
+                        .catch(e => console.log('ℹ️ Не в VK окружении'));
                 }
+            } catch (e) {
+                console.log('Ошибка VK:', e);
+            }
+        })();
+
+        // Кнопка назад
+        document.getElementById('vk-back-button').addEventListener('click', function() {
+            try {
+                if (typeof vkBridge !== 'undefined') {
+                    vkBridge.send('VKWebAppClose', { status: 'success' });
+                } else {
+                    window.history.back();
+                }
+            } catch (e) {
+                window.history.back();
+            }
+        });
+
+        // ДАННЫЕ ОТВЕТОВ ПОЛЬЗОВАТЕЛЯ
+        let userAnswers = {
+            plantType: null,
+            goal: null,
+            season: null
+        };
+        
+        // БАЗА ДАННЫХ УДОБРЕНИЙ
+        const FERTILIZERS = {
+            цветущее: {
+                рост: [{name: "Удобрение для цветущих (NPK 10-5-5)", dosage: "1 мл на 1 л воды", method: "под корень"}],
+                цветение: [{name: "Удобрение для бутонизации (NPK 5-10-10)", dosage: "1 мл на 1 л воды", method: "под корень"}],
+                корни: [{name: "Корневин", dosage: "1 г на 1 л воды", method: "под корень"}],
+                иммунитет: [
+                    {name: "Эпин-Экстра", dosage: "2 капли на 1 л воды", method: "по листу"},
+                    {name: "Циркон", dosage: "1 капля на 1 л воды", method: "по листу"}
+                ],
+                листья: [{name: "Железный хелат", dosage: "0.5 г на 1 л воды", method: "по листу"}],
+                здоровье: [
+                    {name: "Универсальное удобрение (NPK 7-7-7)", dosage: "1 мл на 1 л воды", method: "под корень"},
+                    {name: "HB-101", dosage: "1-2 капли на 1 л воды", method: "по листу или под корень"}
+                ]
+            },
+            декоративнолиственное: {
+                рост: [{name: "Удобрение для декоративно-лиственных (NPK 8-3-5)", dosage: "1 мл на 1 л воды", method: "под корень"}],
+                цветение: [{name: "Универсальное удобрение (NPK 7-7-7)", dosage: "1 мл на 1 л воды", method: "под корень"}],
+                корни: [{name: "Корневин", dosage: "1 г на 1 л воды", method: "под корень"}],
+                иммунитет: [
+                    {name: "HB-101", dosage: "1-2 капли на 1 л воды", method: "по листу или под корень"},
+                    {name: "Эпин-Экстра", dosage: "2 капли на 1 л воды", method: "по листу"}
+                ],
+                листья: [
+                    {name: "Железный хелат", dosage: "0.5 г на 1 л воды", method: "по листу"},
+                    {name: "Удобрение с магнием", dosage: "1 мл на 1 л воды", method: "по листу"}
+                ],
+                здоровье: [
+                    {name: "Комплексное удобрение для лиственных", dosage: "1 мл на 1 л воды", method: "под корень"},
+                    {name: "Циркон", dosage: "1 капля на 1 л воды", method: "по листу"}
+                ]
+            },
+            кактусы: {
+                рост: [{name: "Удобрение для кактусов (NPK 2-7-7)", dosage: "0.5 мл на 1 л воды", method: "под корень"}],
+                цветение: [{name: "Для цветения кактусов (NPK 5-10-10)", dosage: "0.5 мл на 1 л воды", method: "под корень"}],
+                корни: [{name: "Корневин (1/4 дозы)", dosage: "0.25 г на 1 л воды", method: "под корень"}],
+                иммунитет: [
+                    {name: "Циркон", dosage: "1 капля на 2 л воды", method: "по листу"},
+                    {name: "Эпин-Экстра", dosage: "1 капля на 2 л воды", method: "по листу"}
+                ],
+                листья: [{name: "Удобрение для суккулентов", dosage: "0.5 мл на 1 л воды", method: "под корень"}],
+                здоровье: [{name: "HB-101 для суккулентов", dosage: "1 капля на 2 л воды", method: "по листу или под корень"}]
+            },
+            орхидеи: {
+                рост: [{name: "Удобрение для орхидей роста (NPK 30-10-10)", dosage: "0.5 мл на 1 л воды", method: "погружением"}],
+                цветение: [{name: "Удобрение для орхидей цветения (NPK 10-30-20)", dosage: "0.5 мл на 1 л воды", method: "погружением"}],
+                корни: [{name: "Корневин для орхидей", dosage: "0.3 г на 1 л воды", method: "погружением"}],
+                иммунитет: [
+                    {name: "Циркон для орхидей", dosage: "1 капля на 2 л воды", method: "по листу"},
+                    {name: "Эпин-Экстра", dosage: "1 капля на 2 л воды", method: "по листу"}
+                ],
+                листья: [{name: "Удобрение для листьев орхидей", dosage: "0.5 мл на 1 л воды", method: "по листу"}],
+                здоровье: [
+                    {name: "Универсальное для орхидей (NPK 20-20-20)", dosage: "0.5 мл на 1 л воды", method: "погружением"},
+                    {name: "HB-101", dosage: "1 капля на 2 л воды", method: "по листу или погружением"}
+                ]
+            },
+            зелень: {
+                рост: [{name: "Удобрение для зелени (NPK 10-5-5)", dosage: "1 мл на 1 л воды", method: "под корень"}],
+                цветение: [{name: "Для трав и зелени (NPK 5-10-10)", dosage: "1 мл на 1 л воды", method: "под корень"}],
+                корни: [{name: "Фосфорное удобрение", dosage: "0.5 г на 1 л воды", method: "под корень"}],
+                иммунитет: [
+                    {name: "Циркон", dosage: "1 капля на 1 л воды", method: "по листу"},
+                    {name: "Эпин-Экстра", dosage: "2 капли на 1 л воды", method: "по листу"}
+                ],
+                листья: [{name: "Азотное удобрение", dosage: "0.5 г на 1 л воды", method: "по листу"}],
+                здоровье: [
+                    {name: "Универсальное для зелени", dosage: "1 мл на 1 л воды", method: "под корень"},
+                    {name: "HB-101", dosage: "1-2 капли на 1 л воды", method: "по листу или под корень"}
+                ]
+            },
+            пальмы: {
+                рост: [{name: "Удобрение для пальм и драцен (NPK 3-1-3)", dosage: "1 мл на 1 л воды", method: "под корень"}],
+                цветение: [{name: "Для декоративных пальм", dosage: "1 мл на 1 л воды", method: "под корень"}],
+                корни: [{name: "Корневин (1/2 дозы)", dosage: "0.5 г на 1 л воды", method: "под корень"}],
+                иммунитет: [
+                    {name: "HB-101", dosage: "1-2 капли на 1 л воды", method: "по листу или под корень"},
+                    {name: "Циркон", dosage: "1 капля на 1 л воды", method: "по листу"}
+                ],
+                листья: [
+                    {name: "Удобрение с магнием для пальм", dosage: "1 мл на 1 л воды", method: "по листу"},
+                    {name: "Железный хелат", dosage: "0.5 г на 1 л воды", method: "по листу"}
+                ],
+                здоровье: [
+                    {name: "Комплексное для пальм", dosage: "1 мл на 1 л воды", method: "под корень"},
+                    {name: "Эпин-Экстра", dosage: "2 капли на 1 л воды", method: "по листу"}
+                ]
+            },
+            цитрусовые: {
+                рост: [
+                    {name: "Удобрение для цитрусовых (NPK 16-8-12)", dosage: "1 мл на 1 л воды", method: "под корень"},
+                    {name: "Азотное удобрение", dosage: "0.5 г на 1 л воды", method: "под корень"}
+                ],
+                цветение: [
+                    {name: "Удобрение для цветения цитрусовых (NPK 8-12-24)", dosage: "1 мл на 1 л воды", method: "под корень"},
+                    {name: "Борная кислота", dosage: "0.2 г на 1 л воды", method: "по листу"}
+                ],
+                корни: [
+                    {name: "Корневин", dosage: "0.5 г на 1 л воды", method: "под корень"},
+                    {name: "Гетероауксин", dosage: "0.1 г на 1 л воды", method: "под корень"}
+                ],
+                иммунитет: [
+                    {name: "Циркон для цитрусовых", dosage: "1 капля на 1 л воды", method: "по листу"},
+                    {name: "Эпин-Экстра", dosage: "2 капли на 1 л воды", method: "по листу"},
+                    {name: "Янтарная кислота", dosage: "0.5 г на 1 л воды", method: "по листу или под корень"}
+                ],
+                листья: [
+                    {name: "Железный хелат", dosage: "0.5 г на 1 л воды", method: "по листу"},
+                    {name: "Магниевое удобрение", dosage: "0.5 г на 1 л воды", method: "по листу"},
+                    {name: "Кальциевая селитра", dosage: "0.5 г на 1 л воды", method: "по листу"}
+                ],
+                здоровье: [
+                    {name: "Комплексное удобрение для цитрусовых", dosage: "1 мл на 1 л воды", method: "под корень"},
+                    {name: "HB-101", dosage: "1-2 капли на 1 л воды", method: "по листу или под корень"},
+                    {name: "Микроудобрение для цитрусовых", dosage: "0.5 мл на 1 л воды", method: "по листу"}
+                ]
             }
         };
         
-        // Переопределяем функцию
-        shareResult = window.shareResult;
-    });
+        // ЧАСТОТА ПОДКОРМОК ПО СЕЗОНАМ
+        const SEASON_FREQUENCY = {
+            весна: "Каждые 2 недели",
+            лето: "Каждые 10-14 дней",
+            осень: "1 раз в 3-4 недели",
+            зима: "1 раз в 6-8 недель (только по необходимости)"
+        };
+        
+        const CITRUS_FREQUENCY = {
+            весна: "Каждые 10-14 дней",
+            лето: "Каждые 7-10 дней в период активного роста",
+            осень: "Каждые 3 недели",
+            зима: "1 раз в месяц (половинная доза)"
+        };
+        
+        // ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ
+        document.addEventListener('DOMContentLoaded', function() {
+            // ЭЛЕМЕНТЫ ЭКРАНОВ
+            const screens = {
+                loading: document.getElementById('loading-screen'),
+                question1: document.getElementById('question-1-screen'),
+                question2: document.getElementById('question-2-screen'),
+                question3: document.getElementById('question-3-screen'),
+                processing: document.getElementById('processing-screen'),
+                results: document.getElementById('results-screen')
+            };
+            
+            const resultsContainer = document.getElementById('results-container');
+            const restartBtn = document.getElementById('restart-btn');
+            const shareVkBtn = document.getElementById('share-vk');
+            const shareTgBtn = document.getElementById('share-tg');
+            const processingProgress = document.getElementById('processing-progress');
+            const processingStatus = document.getElementById('processing-status');
+            
+            const steps = {
+                step1: document.getElementById('step1'),
+                step2: document.getElementById('step2'),
+                step3: document.getElementById('step3'),
+                step4: document.getElementById('step4')
+            };
+            
+            // ИНИЦИАЛИЗАЦИЯ
+            initApp();
+            
+            function initApp() {
+                startLoadingSequence();
+                initOptionButtons();
+                restartBtn.addEventListener('click', restartQuiz);
+                
+                // Обновленные функции шеринга
+                shareVkBtn.addEventListener('click', () => shareResult('vk'));
+                shareTgBtn.addEventListener('click', () => shareResult('telegram'));
+            }
+            
+            function startLoadingSequence() {
+                let progress = 0;
+                const loaderProgress = document.getElementById('loader-progress');
+                const interval = setInterval(() => {
+                    progress += 1;
+                    loaderProgress.style.width = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            switchScreen(screens.loading, screens.question1);
+                        }, 300);
+                    }
+                }, 30);
+            }
+            
+            function switchScreen(fromScreen, toScreen) {
+                fromScreen.classList.remove('active');
+                fromScreen.classList.add('hidden');
+                
+                setTimeout(() => {
+                    toScreen.classList.remove('hidden');
+                    toScreen.classList.add('active');
+                }, 10);
+            }
+            
+            function initOptionButtons() {
+                document.querySelectorAll('#question-1-screen .option-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        selectOption(this, 'plantType', screens.question1, screens.question2);
+                    });
+                });
+                
+                document.querySelectorAll('#question-2-screen .option-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        selectOption(this, 'goal', screens.question2, screens.question3);
+                    });
+                });
+                
+                document.querySelectorAll('#question-3-screen .option-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        selectOption(this, 'season', screens.question3, screens.processing, true);
+                    });
+                });
+            }
+            
+            function selectOption(button, answerKey, currentScreen, nextScreen, isLastQuestion = false) {
+                const screen = button.closest('.screen');
+                screen.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                button.classList.add('selected');
+                userAnswers[answerKey] = button.getAttribute('data-value');
+                
+                setTimeout(() => {
+                    if (isLastQuestion) {
+                        switchScreen(currentScreen, nextScreen);
+                        startProcessingSequence();
+                    } else {
+                        switchScreen(currentScreen, nextScreen);
+                    }
+                }, 500);
+            }
+            
+            function startProcessingSequence() {
+                let progress = 0;
+                processingProgress.style.width = '0%';
+                
+                Object.values(steps).forEach(step => {
+                    step.classList.remove('active');
+                    step.querySelector('i').className = 'fas fa-check';
+                });
+                
+                const interval = setInterval(() => {
+                    progress += 1;
+                    processingProgress.style.width = `${progress}%`;
+                    
+                    if (progress >= 25) {
+                        steps.step1.classList.add('active');
+                        processingStatus.textContent = "Определяем потребности...";
+                    }
+                    if (progress >= 50) {
+                        steps.step2.classList.add('active');
+                        processingStatus.textContent = "Подбираем удобрения...";
+                    }
+                    if (progress >= 75) {
+                        steps.step3.classList.add('active');
+                        processingStatus.textContent = "Рассчитываем дозировки...";
+                    }
+                    if (progress >= 90) {
+                        steps.step4.classList.add('active');
+                        processingStatus.textContent = "Формируем график...";
+                        steps.step4.querySelector('i').className = 'fas fa-spinner fa-spin';
+                    }
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        setTimeout(() => {
+                            switchScreen(screens.processing, screens.results);
+                            showResults();
+                        }, 1000);
+                    }
+                }, 30);
+            }
+            
+            function showResults() {
+                resultsContainer.innerHTML = '';
+                
+                if (!userAnswers.plantType || !userAnswers.goal || !userAnswers.season) {
+                    resultsContainer.innerHTML = '<div class="result-card"><p>Пожалуйста, ответьте на все вопросы</p></div>';
+                    return;
+                }
+                
+                const fertilizers = FERTILIZERS[userAnswers.plantType]?.[userAnswers.goal] || 
+                                   [{name: "Универсальное удобрение", dosage: "1 мл на 1 л воды", method: "под корень"}];
+                
+                const fertilizer = fertilizers[0];
+                const frequency = userAnswers.plantType === 'цитрусовые' 
+                    ? CITRUS_FREQUENCY[userAnswers.season] 
+                    : SEASON_FREQUENCY[userAnswers.season];
+                
+                const getPlantTypeName = (type) => {
+                    const names = {
+                        'цветущее': 'Цветущие растения',
+                        'декоративнолиственное': 'Декоративно-лиственные',
+                        'кактусы': 'Кактусы и суккуленты',
+                        'орхидеи': 'Орхидеи',
+                        'зелень': 'Зелень и травы',
+                        'пальмы': 'Пальмы и драцены',
+                        'цитрусовые': 'Цитрусовые '
+                    };
+                    return names[type] || type;
+                };
+                
+                const getGoalName = (goal) => {
+                    const names = {
+                        'рост': 'Для роста',
+                        'цветение': 'Для цветения',
+                        'корни': 'Для корней',
+                        'иммунитет': 'Для иммунитета',
+                        'листья': 'Для листьев',
+                        'здоровье': 'Для общего здоровья'
+                    };
+                    return names[goal] || goal;
+                };
+                
+                const getSeasonName = (season) => {
+                    const names = {
+                        'весна': 'Весна',
+                        'лето': 'Лето',
+                        'осень': 'Осень',
+                        'зима': 'Зима'
+                    };
+                    return names[season] || season;
+                };
+                
+                let cardClass = '';
+                switch(userAnswers.plantType) {
+                    case 'кактусы':
+                    case 'пальмы':
+                        cardClass = 'succulent';
+                        break;
+                    case 'орхидеи':
+                        cardClass = 'orchid';
+                        break;
+                    case 'зима':
+                        cardClass = 'winter';
+                        break;
+                    case 'цитрусовые':
+                        cardClass = 'citrus';
+                        break;
+                }
+                
+                const mainCard = document.createElement('div');
+                mainCard.className = `result-card ${cardClass}`;
+                mainCard.innerHTML = `
+                    <h3 class="result-title"><i class="fas fa-clipboard-list"></i> Схема подкормки</h3>
+                    
+                    <div class="fertilizer-schedule">
+                        <h4>📋 Основные данные:</h4>
+                        <p><strong>Тип растения:</strong> ${getPlantTypeName(userAnswers.plantType)}</p>
+                        <p><strong>Цель:</strong> ${getGoalName(userAnswers.goal)}</p>
+                        <p><strong>Сезон:</strong> ${getSeasonName(userAnswers.season)}</p>
+                        <p><strong>Частота:</strong> ${frequency}</p>
+                    </div>
+                    
+                    <div class="fertilizer-schedule">
+                        <h4>🧪 Рекомендуемые средства:</h4>
+                        ${fertilizers.map(fert => `
+                            <div class="dosage-info">
+                                <strong>${fert.name}</strong><br>
+                                <strong>Дозировка:</strong> ${fert.dosage}<br>
+                                <strong>Способ:</strong> ${fert.method}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                resultsContainer.appendChild(mainCard);
+                
+                const seasonCard = document.createElement('div');
+                seasonCard.className = userAnswers.season === 'зима' ? 'result-card winter' : `result-card ${cardClass}`;
+                
+                let seasonAdvice = '';
+                if (userAnswers.season === 'зима') {
+                    seasonAdvice = `
+                        <div class="fertilizer-schedule">
+                            <h4>❄️ Зимние особенности:</h4>
+                            <p>Большинство растений зимой отдыхают. Если хотите поддержать растение:</p>
+                            <div class="dosage-info">
+                                <strong>Янтарная кислота</strong><br>
+                                <strong>Дозировка:</strong> 0.5 г на 1 л воды (примерно 1 таблетка)<br>
+                                <strong>Способ:</strong> под корень или по листу<br>
+                                <strong>Частота:</strong> 1 раз в 4-6 недель
+                            </div>
+                        </div>
+                    `;
+                } else if (userAnswers.season === 'осень') {
+                    seasonAdvice = `
+                        <div class="fertilizer-schedule">
+                            <h4>🍂 Осенние особенности:</h4>
+                            <p>Сокращайте азотные подкормки. Увеличивайте калий и фосфор.</p>
+                            <p>Последняя подкормка — за 3-4 недели до отопительного сезона.</p>
+                        </div>
+                    `;
+                } else if (userAnswers.season === 'лето') {
+                    seasonAdvice = `
+                        <div class="fertilizer-schedule">
+                            <h4>☀️ Летние особенности:</h4>
+                            <p>В жару растения испытывают стресс. Удобряйте утром или вечером.</p>
+                            <p>Если температура выше 28°C — пропустите подкормку.</p>
+                        </div>
+                    `;
+                } else {
+                    seasonAdvice = `
+                        <div class="fertilizer-schedule">
+                            <h4>🌱 Весенние особенности:</h4>
+                            <p>Начинайте подкормки, когда растение тронулось в рост.</p>
+                            <p>Первая подкормка — 1/2 дозы, вторая — полная доза.</p>
+                        </div>
+                    `;
+                }
+                
+                let specialCases = '';
+                
+                if (userAnswers.plantType === 'цитрусовые') {
+                    specialCases += `
+                        <div class="dosage-info">
+                            <strong>🍋 Особенности ухода за цитрусовыми:</strong><br>
+                            • <strong>Кислотность почвы:</strong> pH 5.5-6.5<br>
+                            • <strong>Освещение:</strong> минимум 4-5 часов прямого солнца в день<br>
+                            • <strong>Влажность:</strong> регулярно опрыскивайте листья<br>
+                            • <strong>Полив:</strong> только когда верхний слой почвы просох на 2-3 см<br>
+                            • <strong>Зимовка:</strong> при температуре 12-16°C с редким поливом
+                        </div>
+                    `;
+                }
+                
+                if (userAnswers.plantType === 'орхидеи') {
+                    specialCases += `
+                        <div class="dosage-info">
+                            <strong>🌺 Особенности ухода за орхидеями:</strong><br>
+                            • Удобряйте только после полива<br>
+                            • Используйте метод погружения на 15-20 минут<br>
+                            • Не допускайте застоя воды в поддоне<br>
+                        </div>
+                    `;
+                }
+                
+                if (userAnswers.plantType === 'кактусы') {
+                    specialCases += `
+                        <div class="dosage-info">
+                            <strong>🌵 Особенности ухода за суккулентами:</strong><br>
+                            • Всегда используйте половинные дозы удобрений<br>
+                            • Поливайте только при полном высыхании грунта<br>
+                            • Предпочитают фосфорно-калийные удобрения
+                        </div>
+                    `;
+                }
+                
+                if (userAnswers.plantType === 'пальмы') {
+                    specialCases += `
+                        <div class="dosage-info">
+                            <strong>🌴 Особенности ухода за пальмами и драценами:</strong><br>
+                            • Чувствительны к избытку фтора<br>
+                            • Любят редкий, но обильный полив<br>
+                            • Подкармливайте в период активного роста<br>
+                            • Регулярно опрыскивайте листья
+                        </div>
+                    `;
+                }
+                
+                if (userAnswers.goal === 'иммунитет') {
+                    specialCases += `
+                        <div class="dosage-info">
+                            <strong>🛡️ Стимуляторы и адаптогены:</strong><br>
+                            • <strong>Эпин-Экстра</strong> — для стрессовых ситуаций (2 капли/1л)<br>
+                            • <strong>Циркон</strong> — для корнеобразования и иммунитета (1 капля/1л)<br>
+                            • <strong>HB-101</strong> — природный стимулятор (1-2 капли/1л)<br>
+                            • <strong>Янтарная кислота</strong> — общеукрепляющее (0.5 г/1л)<br>
+                            <em>Используйте по очереди, не смешивайте!</em>
+                        </div>
+                    `;
+                }
+                
+                seasonCard.innerHTML = `
+                    <h3 class="result-title"><i class="fas fa-calendar-alt"></i> Рекомендации по уходу</h3>
+                    ${seasonAdvice}
+                    ${specialCases}
+                    <div class="funny-note">
+                        <strong>💡 Золотое правило:</strong> Всегда поливайте растение за 2 часа до подкормки.<br>
+                        Лучше недокормить, чем перекормить!
+                    </div>
+                `;
+                resultsContainer.appendChild(seasonCard);
+                
+                const warningCard = document.createElement('div');
+                warningCard.className = 'result-card warning';
+                warningCard.innerHTML = `
+                    <h3 class="result-title"><i class="fas fa-exclamation-triangle"></i> Важно знать</h3>
+                    <div class="warning-note">
+                        <strong>⚠️ Никогда не удобряйте:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>Только что пересаженные растения (ждать 3-4 недели)</li>
+                            <li>Больные или ослабленные растения</li>
+                            <li>На сухую почву (сначала полейте!)</li>
+                            <li>При ярком солнце или в жару</li>
+                            <li>Спящие растения (зимой большинство видов)</li>
+                            ${userAnswers.plantType === 'цитрусовые' ? '<li>Цитрусовые во время цветения (только до и после)</li>' : ''}
+                        </ul>
+                    </div>
+                    <div class="funny-note">
+                        <strong>🎯 Профессиональный совет:</strong> Чередуйте корневые и внекорневые подкормки.<br>
+                        Весной и летом — больше азота, осенью — калия, зимой — отдых!
+                    </div>
+                `;
+                resultsContainer.appendChild(warningCard);
+            }
+            
+            function shareResult(platform) {
+                if (!userAnswers.plantType || !userAnswers.goal || !userAnswers.season) {
+                    alert('Сначала пройдите тест');
+                    return;
+                }
+                
+                const appUrl = 'https://t.me/PlantSurvivorbot/test';
+                const vkAppUrl = 'https://vk.com/app54467162'; // Ваш ID приложения
+                
+                const getPlantTypeName = (type) => {
+                    const names = {
+                        'цветущее': 'Цветущие растения',
+                        'декоративнолиственное': 'Декоративно-лиственные',
+                        'кактусы': 'Кактусы и суккуленты',
+                        'орхидеи': 'Орхидеи',
+                        'зелень': 'Зелень и травы',
+                        'пальмы': 'Пальмы и драцены',
+                        'цитрусовые': 'Цитрусовые '
+                    };
+                    return names[type] || type;
+                };
+                
+                const getGoalName = (goal) => {
+                    const names = {
+                        'рост': 'Для роста',
+                        'цветение': 'Для цветения',
+                        'корни': 'Для корней',
+                        'иммунитет': 'Для иммунитета',
+                        'листья': 'Для листьев',
+                        'здоровье': 'Для общего здоровья'
+                    };
+                    return names[goal] || goal;
+                };
+                
+                const getSeasonName = (season) => {
+                    const names = {
+                        'весна': 'Весна',
+                        'лето': 'Лето',
+                        'осень': 'Осень',
+                        'зима': 'Зима'
+                    };
+                    return names[season] || season;
+                };
+                
+                const fertilizers = FERTILIZERS[userAnswers.plantType]?.[userAnswers.goal] || 
+                                   [{name: "Универсальное удобрение", dosage: "1 мл на 1 л воды", method: "под корень"}];
+                const fertilizer = fertilizers[0];
+                
+                const shareText = `🧪 Удобрятор подобрал мне схему подкормки!\n\n` +
+                               `🌿 ${getPlantTypeName(userAnswers.plantType)}\n` +
+                               `🎯 ${getGoalName(userAnswers.goal)}\n` +
+                               `📅 ${getSeasonName(userAnswers.season)}\n` +
+                               `💧 ${fertilizer.name}: ${fertilizer.dosage}\n\n` +
+                               `Составь свою схему! 👇\n`;
+                
+                let shareUrl = '';
+                
+                if (platform === 'vk') {
+                    try {
+                        if (typeof vkBridge !== 'undefined') {
+                            vkBridge.send('VKWebAppShowShareBox', {
+                                text: shareText,
+                                link: vkAppUrl
+                            }).catch(() => {
+                                shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Удобрятор&description=${encodeURIComponent(shareText)}&noparse=true`;
+                                window.open(shareUrl, '_blank', 'width=600,height=500');
+                            });
+                            return;
+                        }
+                    } catch (e) {}
+                    
+                    shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Удобрятор&description=${encodeURIComponent(shareText)}&noparse=true`;
+                    
+                } else if (platform === 'telegram') {
+                    shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(shareText + appUrl)}`;
+                }
+                
+                if (shareUrl) {
+                    const width = 600;
+                    const height = 500;
+                    const left = (window.innerWidth - width) / 2;
+                    const top = (window.innerHeight - height) / 2;
+                    window.open(shareUrl, '_blank', `width=${width},height=${height},top=${top},left=${left}`);
+                }
+            }
+            
+            function restartQuiz() {
+                userAnswers = {
+                    plantType: null,
+                    goal: null,
+                    season: null
+                };
+                
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                Object.values(screens).forEach(screen => {
+                    screen.classList.remove('active');
+                    screen.classList.add('hidden');
+                });
+                
+                screens.loading.classList.remove('hidden');
+                screens.loading.classList.add('active');
+                startLoadingSequence();
+            }
+        });
     </script>
 </body>
 </html>
