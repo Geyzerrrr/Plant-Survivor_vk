@@ -7,8 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Сначала конфиг, потом VK Bridge -->
-    <script src="config.js"></script>
+    <!-- VK Bridge для интеграции с VK Mini Apps -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     
     <style>
@@ -56,11 +55,14 @@
         }
         
         h1 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
             font-size: 32px;
             margin-bottom: 10px;
             background: linear-gradient(45deg, #1a237e, #283593, #1b5e20);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .welcome-subtitle {
@@ -83,7 +85,7 @@
             border-radius: 16px;
             text-align: left;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 15px;
@@ -96,9 +98,17 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         
-        .app-card:nth-child(1):hover { border-color: #283593; }
-        .app-card:nth-child(2):hover { border-color: #5D4037; }
-        .app-card:nth-child(3):hover { border-color: #1b5e20; }
+        .app-card:nth-child(1):hover {
+            border-color: #283593;
+        }
+        
+        .app-card:nth-child(2):hover {
+            border-color: #5D4037;
+        }
+        
+        .app-card:nth-child(3):hover {
+            border-color: #1b5e20;
+        }
         
         .app-icon {
             width: 60px;
@@ -112,15 +122,27 @@
             flex-shrink: 0;
         }
         
-        .app-card:nth-child(1) .app-icon { background: linear-gradient(135deg, #283593, #1a237e); }
-        .app-card:nth-child(2) .app-icon { background: linear-gradient(135deg, #795548, #5D4037); }
-        .app-card:nth-child(3) .app-icon { background: linear-gradient(135deg, #4CAF50, #2E7D32); }
+        .app-card:nth-child(1) .app-icon {
+            background: linear-gradient(135deg, #283593, #1a237e);
+            box-shadow: 0 4px 15px rgba(41,98,255,0.3);
+        }
+        
+        .app-card:nth-child(2) .app-icon {
+            background: linear-gradient(135deg, #795548, #5D4037);
+            box-shadow: 0 4px 15px rgba(121,85,72,0.3);
+        }
+        
+        .app-card:nth-child(3) .app-icon {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            box-shadow: 0 4px 15px rgba(76,175,80,0.3);
+        }
         
         .app-content {
             flex: 1;
         }
         
         .app-title {
+            font-family: 'Nunito', sans-serif;
             font-weight: 900;
             font-size: 18px;
             color: #333;
@@ -136,58 +158,200 @@
         .arrow-icon {
             color: #999;
             font-size: 18px;
+            transition: transform 0.3s;
         }
         
+        .app-card:hover .arrow-icon {
+            transform: translateX(5px);
+        }
+        
+        .app-card:nth-child(1):hover .arrow-icon {
+            color: #283593;
+        }
+        
+        .app-card:nth-child(2):hover .arrow-icon {
+            color: #5D4037;
+        }
+        
+        .app-card:nth-child(3):hover .arrow-icon {
+            color: #1b5e20;
+        }
+        
+        /* ФУТЕР */
         .footer {
             margin-top: 30px;
             padding-top: 20px;
             border-top: 2px dashed #e0e0e0;
+            text-align: center;
         }
         
-        .telegram-link {
+        .creator-info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .vk-link {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: #0088cc;
+            background: #4C75A3;
             color: white;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 12px;
             text-decoration: none;
-            font-size: 14px;
-            margin-top: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 15px;
         }
         
-        .error-message {
-            color: #f44336;
-            padding: 20px;
-            text-align: center;
+        .vk-link:hover {
+            background: #3A5B7A;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76,117,163,0.3);
+        }
+        
+        .vk-link i {
+            font-size: 18px;
+        }
+        
+        /* КНОПКА НАЗАД ДЛЯ VK */
+        .vk-back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
             display: none;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.3);
         }
         
-        .error-message.show {
-            display: block;
+        .vk-back-button.visible {
+            display: flex;
         }
         
+        .vk-back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* АДАПТАЦИЯ */
         @media (max-width: 400px) {
-            .app-icon { width: 50px; height: 50px; font-size: 30px; }
-            .app-title { font-size: 16px; }
-            .app-description { font-size: 12px; }
+            .app-container {
+                border-radius: 16px;
+            }
+            
+            .welcome-screen {
+                padding: 25px 12px;
+            }
+            
+            h1 {
+                font-size: 28px;
+            }
+            
+            .welcome-subtitle {
+                font-size: 14px;
+                margin-bottom: 25px;
+            }
+            
+            .app-card {
+                padding: 15px;
+                gap: 12px;
+            }
+            
+            .app-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 30px;
+            }
+            
+            .app-title {
+                font-size: 16px;
+            }
+            
+            .app-description {
+                font-size: 12px;
+            }
+            
+            .logo-svg {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .logo-svg .plant-emoji {
+                font-size: 60px;
+            }
+            
+            .vk-link {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            
+            .vk-back-button {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
         }
+        
+        /* АНИМАЦИИ */
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .plant-emoji {
+            animation: gentleFloat 3s infinite ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .app-card {
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
+        }
+        
+        .app-card:nth-child(1) { animation-delay: 0.1s; }
+        .app-card:nth-child(2) { animation-delay: 0.2s; }
+        .app-card:nth-child(3) { animation-delay: 0.3s; }
     </style>
 </head>
 <body>
     <script>
-    // Глобальный обработчик ошибок
-    window.onerror = function(msg, url, line) {
-        console.error('Ошибка:', msg, 'в', url, 'строка:', line);
-        document.getElementById('error-message').textContent = 'Ошибка загрузки: ' + msg;
-        document.getElementById('error-message').classList.add('show');
-        return false;
-    };
+    // Инициализация VK Mini App
+    try {
+        if (typeof vkBridge !== 'undefined') {
+            vkBridge.send('VKWebAppInit')
+                .then(() => {
+                    console.log('✅ VK Mini App инициализирован');
+                    // Показываем кнопку назад, если мы внутри VK
+                    if (window.location !== window.parent.location) {
+                        document.getElementById('vk-back-button').classList.add('visible');
+                    }
+                })
+                .catch(e => console.log('ℹ️ Не в VK окружении'));
+        }
+    } catch (e) {
+        console.log('Ошибка VK:', e);
+    }
     </script>
 
     <div class="app-container">
-        <div class="error-message" id="error-message"></div>
+        <!-- Кнопка назад для VK -->
+        <button class="vk-back-button" id="vk-back-button">
+            <i class="fas fa-arrow-left"></i> Назад
+        </button>
         
         <div class="welcome-screen">
             <div>
@@ -198,122 +362,92 @@
                     <h1>Plant Survivor</h1>
                     <p class="welcome-subtitle">
                         Что сегодня ты хочешь узнать?
+                        <br>Выбери мини-приложение для своих растений
                     </p>
                 </div>
                 
-                <div class="apps-container" id="appsContainer">
-                    <!-- Приложения будут загружены через JavaScript -->
-                    <div style="text-align: center; padding: 20px;">Загрузка...</div>
+                <div class="apps-container">
+                    <!-- Мини-приложение 1: Удобрятор -->
+                    <a href="element.html" class="app-card">
+                        <div class="app-icon">🧪</div>
+                        <div class="app-content">
+                            <h3 class="app-title">Удобрятор</h3>
+                            <p class="app-description">
+                                Подбери идеальную схему подкормки для своих растений
+                            </p>
+                        </div>
+                        <div class="arrow-icon">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
+                    
+                    <!-- Мини-приложение 2: Грунтовед -->
+                    <a href="grunt.html" class="app-card">
+                        <div class="app-icon">🌿</div>
+                        <div class="app-content">
+                            <h3 class="app-title">Грунтовед</h3>
+                            <p class="app-description">
+                                Создай идеальный грунт для любого растения
+                            </p>
+                        </div>
+                        <div class="arrow-icon">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
+                    
+                    <!-- Мини-приложение 3: Plant test -->
+                    <a href="test.html" class="app-card">
+                        <div class="app-icon">🏆</div>
+                        <div class="app-content">
+                            <h3 class="app-title">Plant test</h3>
+                            <p class="app-description">
+                                Найди растения, которые выживут с тобой
+                            </p>
+                        </div>
+                        <div class="arrow-icon">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
                 </div>
             </div>
             
-<!-- ФУТЕР -->
-<div class="footer">
-    <p class="creator-info">Все приложения созданы для заботы о растениях</p>
-    <a href="https://vk.com/geyzerrr_blog" target="_blank" class="vk-link">
-        <i class="fab fa-vk"></i> Создано Geyzerrr
-    </a>
-</div>
+            <!-- ФУТЕР (обновленный) -->
+            <div class="footer">
+                <p class="creator-info">Все приложения созданы для заботы о растениях</p>
+                <a href="https://vk.com/geyzerrr_blog" target="_blank" class="vk-link">
+                    <i class="fab fa-vk"></i> Создано Geyzerrr
+                </a>
+            </div>
         </div>
     </div>
     
     <script>
-    // Основная логика
-    document.addEventListener('DOMContentLoaded', function() {
+    // Кнопка назад
+    document.getElementById('vk-back-button').addEventListener('click', function() {
         try {
-            // Проверяем конфиг
-            if (!window.appConfig) {
-                throw new Error('config.js не загружен');
-            }
-            
-            console.log('✅ Конфиг загружен:', window.appConfig);
-            
-            // Пытаемся инициализировать VK
             if (typeof vkBridge !== 'undefined') {
-                vkBridge.send('VKWebAppInit')
-                    .then(() => console.log('✅ VK инициализирован'))
-                    .catch(e => console.log('ℹ️ Не в VK'));
+                vkBridge.send('VKWebAppClose', { status: 'success' });
+            } else {
+                window.history.back();
             }
-            
-            // Загружаем приложения
-            loadApps();
-            
         } catch (e) {
-            console.error('❌ Ошибка:', e);
-            document.getElementById('error-message').textContent = 'Ошибка: ' + e.message;
-            document.getElementById('error-message').classList.add('show');
+            window.history.back();
         }
     });
-    
-    function loadApps() {
-        const container = document.getElementById('appsContainer');
+
+    // Дополнительная проверка загрузки
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Главная страница загружена');
         
-        // Данные приложений
-        const apps = [
-            {
-                icon: '🧪',
-                title: 'Удобрятор',
-                description: 'Подбери идеальную схему подкормки',
-                file: window.appConfig.paths.element,
-                color: '#283593'
-            },
-            {
-                icon: '🌿',
-                title: 'Грунтовед',
-                description: 'Создай идеальный грунт для любого растения',
-                file: window.appConfig.paths.grunt,
-                color: '#5D4037'
-            },
-            {
-                icon: '🏆',
-                title: 'Plant test',
-                description: 'Найди растения, которые выживут с тобой',
-                file: window.appConfig.paths.test,
-                color: '#1b5e20'
-            }
-        ];
-        
-        // Формируем HTML
-        container.innerHTML = apps.map(app => `
-            <div class="app-card" onclick="openApp('${app.file}')">
-                <div class="app-icon" style="background: ${app.color}">${app.icon}</div>
-                <div class="app-content">
-                    <h3 class="app-title">${app.title}</h3>
-                    <p class="app-description">${app.description}</p>
-                </div>
-                <div class="arrow-icon">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            </div>
-        `).join('');
-    }
-    
-    // Функция открытия приложения
-    window.openApp = function(file) {
+        // Проверяем, открыто ли приложение в VK
         try {
-            // Формируем полный URL
-            const fullUrl = window.appConfig.baseUrl + '/' + file;
-            console.log('Открываем:', fullUrl);
-            
-            // Проверяем, в VK ли мы
-            if (typeof vkBridge !== 'undefined' && window.location !== window.parent.location) {
-                // В VK пытаемся открыть через bridge
-                vkBridge.send('VKWebAppOpenApp', {
-                    app_id: window.appConfig.vkAppId,
-                    location: file
-                }).catch(() => {
-                    // Если не сработало - обычный переход
-                    window.location.href = fullUrl;
-                });
+            if (window.location !== window.parent.location) {
+                console.log('Приложение открыто внутри VK');
             } else {
-                // Вне VK - просто переходим
-                window.location.href = fullUrl;
+                console.log('Приложение открыто напрямую');
             }
-        } catch (e) {
-            console.error('Ошибка открытия:', e);
-            alert('Не удалось открыть приложение');
-        }
-    };
+        } catch (e) {}
+    });
     </script>
 </body>
 </html>
