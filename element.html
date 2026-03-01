@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- VK Bridge -->
+    <!-- VK Bridge для интеграции с VK Mini Apps -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     
     <style>
-        /* ВАШИ СУЩЕСТВУЮЩИЕ СТИЛИ - Я ИХ НЕ МЕНЯЮ, ПРОСТО ВСТАВЛЯЮ ВАШИ */
+        /* СБРОС СТИЛЕЙ */
         * { 
             margin: 0; 
             padding: 0; 
@@ -19,6 +19,7 @@
             -webkit-tap-highlight-color: transparent; 
         }
         
+        /* ОСНОВНЫЕ СТИЛИ */
         body {
             font-family: 'Nunito', sans-serif;
             background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
@@ -39,7 +40,7 @@
             position: relative;
         }
         
-        /* КНОПКА НАЗАД */
+        /* КНОПКА НАЗАД ДЛЯ VK */
         .vk-back-button {
             position: absolute;
             top: 10px;
@@ -57,11 +58,17 @@
             font-family: 'Nunito', sans-serif;
             font-size: 14px;
             backdrop-filter: blur(5px);
+            transition: all 0.3s;
             border: 1px solid rgba(255,255,255,0.3);
         }
         
         .vk-back-button.visible {
             display: flex;
+        }
+        
+        .vk-back-button:hover {
+            background: rgba(26, 35, 126, 0.3);
+            transform: translateX(-2px);
         }
         
         /* ЭКРАНЫ */
@@ -121,8 +128,12 @@
         }
         
         @keyframes gentleFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
+            0%, 100% { 
+                transform: translateY(0px);
+            }
+            50% { 
+                transform: translateY(-15px);
+            }
         }
         
         h1 {
@@ -345,8 +356,14 @@
         }
         
         @keyframes searchPulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.15); opacity: 0.8; }
+            0%, 100% { 
+                transform: scale(1); 
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.15); 
+                opacity: 0.8;
+            }
         }
         
         .processing-subtitle {
@@ -413,7 +430,7 @@
             text-align: center; 
         }
         
-        /* ЭКРАН РЕЗУЛЬТАТОВ */
+        /* ЭКРАН РЕЗУЛЬТАТОВ (ОБНОВЛЕННЫЙ) */
         #results-screen {
             background: white;
             padding: 30px 20px;
@@ -616,11 +633,6 @@
             box-shadow: 0 4px 12px rgba(76, 117, 163, 0.3);
         }
         
-        .share-btn.tg { 
-            background: #0088cc; 
-            box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
-        }
-        
         .share-note {
             font-size: 14px;
             color: #666;
@@ -643,6 +655,10 @@
         .bot-link:hover {
             background: #1565c0;
             transform: translateY(-2px);
+        }
+        
+        .bot-link i {
+            margin-right: 8px;
         }
         
         /* КНОПКИ ДЕЙСТВИЙ */
@@ -676,7 +692,7 @@
         
         .btn-channel {
             padding: 16px;
-            background: linear-gradient(135deg, #0088cc, #006699);
+            background: #4C75A3;
             color: white;
             border: none;
             border-radius: 16px;
@@ -692,8 +708,13 @@
         }
         
         .btn-channel:hover {
+            background: #3A5B7A;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,136,204,0.4);
+            box-shadow: 0 6px 16px rgba(76,117,163,0.4);
+        }
+        
+        .btn-channel i {
+            font-size: 18px;
         }
         
         /* АДАПТАЦИЯ */
@@ -738,10 +759,39 @@
                 padding: 6px 12px;
                 font-size: 12px;
             }
+            
+            .btn-channel {
+                padding: 14px;
+                font-size: 14px;
+            }
+            
+            .bot-link {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
+    <script>
+    // Инициализация VK Mini App
+    try {
+        if (typeof vkBridge !== 'undefined') {
+            vkBridge.send('VKWebAppInit')
+                .then(() => {
+                    console.log('✅ VK Mini App инициализирован');
+                    // Показываем кнопку назад, если мы внутри VK
+                    if (window.location !== window.parent.location) {
+                        document.getElementById('vk-back-button').classList.add('visible');
+                    }
+                })
+                .catch(e => console.log('ℹ️ Не в VK окружении'));
+        }
+    } catch (e) {
+        console.log('Ошибка VK:', e);
+    }
+    </script>
+
     <div class="app-container">
         <!-- Кнопка назад для VK -->
         <button class="vk-back-button" id="vk-back-button">
@@ -822,7 +872,7 @@
                     </button>
                     <button class="option-btn" data-value="цитрусовые">
                         <span class="option-emoji">🍋</span>
-                        <span class="option-text">Цитрусовые </span>
+                        <span class="option-text">Цитрусовые</span>
                     </button>
                 </div>
             </div>
@@ -946,7 +996,7 @@
             </div>
         </div>
         
-        <!-- ЭКРАН 6: РЕЗУЛЬТАТЫ -->
+        <!-- ЭКРАН 6: РЕЗУЛЬТАТЫ (ОБНОВЛЕННЫЙ) -->
         <div class="screen hidden" id="results-screen">
             <div class="results-header">
                 <div class="results-logo">📋</div>
@@ -964,13 +1014,11 @@
                     <button class="share-btn vk" id="share-vk">
                         <i class="fab fa-vk"></i>
                     </button>
-                    <button class="share-btn tg" id="share-tg">
-                        <i class="fab fa-telegram"></i>
-                    </button>
+                    <!-- Кнопка Telegram удалена -->
                 </div>
-                <p class="share-note">Тест доступен в Telegram мини-приложении:</p>
-                <a href="https://t.me/PlantSurvivorbot/test" target="_blank" class="bot-link">
-                    <i class="fab fa-telegram"></i> Удобрятор Mini App
+                <p class="share-note">Вернуться ко всем тестам:</p>
+                <a href="index.html" class="bot-link">
+                    <i class="fas fa-home"></i> На главную
                 </a>
             </div>
             
@@ -978,33 +1026,14 @@
                 <button class="btn-restart" id="restart-btn">
                     <i class="fas fa-redo"></i> Создать новую схему
                 </button>
-                <a href="https://t.me/geyzerrr_A" target="_blank" class="btn-channel">
-                    <i class="fab fa-telegram"></i> Создано @geyzerrr
+                <a href="https://vk.com/geyzerrr_blog" target="_blank" class="btn-channel">
+                    <i class="fab fa-vk"></i> Создано Geyzerrr
                 </a>
             </div>
         </div>
     </div>
     
     <script>
-        // ИНИЦИАЛИЗАЦИЯ VK
-        (function initVK() {
-            try {
-                if (typeof vkBridge !== 'undefined') {
-                    vkBridge.send('VKWebAppInit')
-                        .then(() => {
-                            console.log('✅ VK Mini App готов');
-                            // Показываем кнопку назад, если мы внутри VK
-                            if (window.location !== window.parent.location) {
-                                document.getElementById('vk-back-button').classList.add('visible');
-                            }
-                        })
-                        .catch(e => console.log('ℹ️ Не в VK окружении'));
-                }
-            } catch (e) {
-                console.log('Ошибка VK:', e);
-            }
-        })();
-
         // Кнопка назад
         document.getElementById('vk-back-button').addEventListener('click', function() {
             try {
@@ -1175,7 +1204,6 @@
             const resultsContainer = document.getElementById('results-container');
             const restartBtn = document.getElementById('restart-btn');
             const shareVkBtn = document.getElementById('share-vk');
-            const shareTgBtn = document.getElementById('share-tg');
             const processingProgress = document.getElementById('processing-progress');
             const processingStatus = document.getElementById('processing-status');
             
@@ -1193,10 +1221,7 @@
                 startLoadingSequence();
                 initOptionButtons();
                 restartBtn.addEventListener('click', restartQuiz);
-                
-                // Обновленные функции шеринга
-                shareVkBtn.addEventListener('click', () => shareResult('vk'));
-                shareTgBtn.addEventListener('click', () => shareResult('telegram'));
+                shareVkBtn.addEventListener('click', () => shareResult());
             }
             
             function startLoadingSequence() {
@@ -1317,7 +1342,6 @@
                 const fertilizers = FERTILIZERS[userAnswers.plantType]?.[userAnswers.goal] || 
                                    [{name: "Универсальное удобрение", dosage: "1 мл на 1 л воды", method: "под корень"}];
                 
-                const fertilizer = fertilizers[0];
                 const frequency = userAnswers.plantType === 'цитрусовые' 
                     ? CITRUS_FREQUENCY[userAnswers.season] 
                     : SEASON_FREQUENCY[userAnswers.season];
@@ -1330,7 +1354,7 @@
                         'орхидеи': 'Орхидеи',
                         'зелень': 'Зелень и травы',
                         'пальмы': 'Пальмы и драцены',
-                        'цитрусовые': 'Цитрусовые '
+                        'цитрусовые': 'Цитрусовые'
                     };
                     return names[type] || type;
                 };
@@ -1539,14 +1563,14 @@
                 resultsContainer.appendChild(warningCard);
             }
             
-            function shareResult(platform) {
+            // ОБНОВЛЕННАЯ ФУНКЦИЯ ШЕРИНГА (только VK)
+            function shareResult() {
                 if (!userAnswers.plantType || !userAnswers.goal || !userAnswers.season) {
                     alert('Сначала пройдите тест');
                     return;
                 }
                 
-                const appUrl = 'https://t.me/PlantSurvivorbot/test';
-                const vkAppUrl = 'https://vk.com/app54467162'; // Ваш ID приложения
+                const vkAppUrl = 'https://vk.com/app54467162';
                 
                 const getPlantTypeName = (type) => {
                     const names = {
@@ -1556,7 +1580,7 @@
                         'орхидеи': 'Орхидеи',
                         'зелень': 'Зелень и травы',
                         'пальмы': 'Пальмы и драцены',
-                        'цитрусовые': 'Цитрусовые '
+                        'цитрусовые': 'Цитрусовые'
                     };
                     return names[type] || type;
                 };
@@ -1594,34 +1618,22 @@
                                `💧 ${fertilizer.name}: ${fertilizer.dosage}\n\n` +
                                `Составь свою схему! 👇\n`;
                 
-                let shareUrl = '';
-                
-                if (platform === 'vk') {
-                    try {
-                        if (typeof vkBridge !== 'undefined') {
-                            vkBridge.send('VKWebAppShowShareBox', {
-                                text: shareText,
-                                link: vkAppUrl
-                            }).catch(() => {
-                                shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Удобрятор&description=${encodeURIComponent(shareText)}&noparse=true`;
-                                window.open(shareUrl, '_blank', 'width=600,height=500');
-                            });
-                            return;
-                        }
-                    } catch (e) {}
-                    
-                    shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Удобрятор&description=${encodeURIComponent(shareText)}&noparse=true`;
-                    
-                } else if (platform === 'telegram') {
-                    shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(shareText + appUrl)}`;
-                }
-                
-                if (shareUrl) {
-                    const width = 600;
-                    const height = 500;
-                    const left = (window.innerWidth - width) / 2;
-                    const top = (window.innerHeight - height) / 2;
-                    window.open(shareUrl, '_blank', `width=${width},height=${height},top=${top},left=${left}`);
+                try {
+                    if (typeof vkBridge !== 'undefined') {
+                        vkBridge.send('VKWebAppShowShareBox', {
+                            text: shareText,
+                            link: vkAppUrl
+                        }).catch(() => {
+                            const shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Удобрятор&description=${encodeURIComponent(shareText)}&noparse=true`;
+                            window.open(shareUrl, '_blank', 'width=600,height=500');
+                        });
+                    } else {
+                        const shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Удобрятор&description=${encodeURIComponent(shareText)}&noparse=true`;
+                        window.open(shareUrl, '_blank', 'width=600,height=500');
+                    }
+                } catch (e) {
+                    console.error('Ошибка шеринга:', e);
+                    alert('Не удалось поделиться результатом');
                 }
             }
             
