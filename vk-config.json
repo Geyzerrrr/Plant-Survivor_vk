@@ -1,0 +1,13 @@
+{
+  "name": "Plant Survivor",
+  "short_name": "PlantTest",
+  "description": "Тесты и советы для ваших растений",
+  "icon": "https://ваш-username.github.io/название-репозитория/icon.png",
+  "icon_grayscale": "https://ваш-username.github.io/название-репозитория/icon_gray.png",
+  "background_color": "#1a237e",
+  "type": "mini_app",
+  "version": "1.0.0",
+  "mobile_view": true,
+  "desktop_view": true,
+  "orientation": "portrait"
+}
