@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Survivor 🌱</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- VK Bridge для интеграции с VK Mini Apps -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    
+    <style>
+        /* ... существующие стили ... */
+        
+        /* Добавить в конец стилей */
+        .vk-back-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .vk-back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <script>
+    // Инициализация VK Mini App
+    try {
+        vkBridge.send('VKWebAppInit');
+        console.log('VK Mini App инициализирован');
+    } catch (e) {
+        console.log('Не в VK окружении');
+    }
+    </script>
+
+    <div class="app-container">
+        <!-- Кнопка назад для VK (будет видна только внутри VK) -->
+        <button class="vk-back-button" id="vk-back-button" style="display: none;">
+            <i class="fas fa-arrow-left"></i> Назад
+        </button>
+        
+        <div class="welcome-screen">
+            <!-- ... существующий контент ... -->
+            
+            <div class="apps-container">
+                <!-- Мини-приложение 1: Удобрятор -->
+                <a href="element.html" class="app-card" onclick="return handleAppLink('element.html')">
+                    <div class="app-icon">🧪</div>
+                    <div class="app-content">
+                        <h3 class="app-title">Удобрятор</h3>
+                        <p class="app-description">
+                            Подбери идеальную схему подкормки для своих растений
+                        </p>
+                    </div>
+                    <div class="arrow-icon">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </a>
+                
+                <!-- Мини-приложение 2: Грунтовед -->
+                <a href="grunt.html" class="app-card" onclick="return handleAppLink('grunt.html')">
+                    <div class="app-icon">🌿</div>
+                    <div class="app-content">
+                        <h3 class="app-title">Грунтовед</h3>
+                        <p class="app-description">
+                            Создай идеальный грунт для любого растения
+                        </p>
+                    </div>
+                    <div class="arrow-icon">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </a>
+                
+                <!-- Мини-приложение 3: Plant test -->
+                <a href="test.html" class="app-card" onclick="return handleAppLink('test.html')">
+                    <div class="app-icon">🏆</div>
+                    <div class="app-content">
+                        <h3 class="app-title">Plant test</h3>
+                        <p class="app-description">
+                            Найди растения, которые выживут с тобой
+                        </p>
+                    </div>
+                    <div class="arrow-icon">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- ... остальной контент ... -->
+        </div>
+    </div>
+    
+    <script>
+    // Анимация при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        // ... существующий код анимаций ...
+        
+        // VK Integration
+        const vkBackButton = document.getElementById('vk-back-button');
+        
+        // Проверяем, запущено ли приложение в VK
+        try {
+            if (vkBridge && window.location !== window.parent.location) {
+                vkBackButton.style.display = 'flex';
+                
+                vkBackButton.addEventListener('click', function() {
+                    vkBridge.send('VKWebAppClose', { status: 'success' });
+                });
+            }
+        } catch (e) {
+            console.log('Не в VK Mini Apps');
+        }
+    });
+    
+    // Функция для обработки переходов между мини-приложениями
+    function handleAppLink(url) {
+        try {
+            // Проверяем, находимся ли мы в VK
+            if (vkBridge && window.location !== window.parent.location) {
+                // В VK открываем в новой вкладке (телефон) или том же окне
+                // В зависимости от платформы
+                vkBridge.send('VKWebAppOpenApp', {
+                    app_id: null, // будет заменено на ID вашего приложения
+                    location: url,
+                    hash: ''
+                }).catch(() => {
+                    // Если не сработало - обычный переход
+                    window.location.href = url;
+                });
+                return false;
+            }
+        } catch (e) {
+            console.log('Ошибка VK перехода');
+        }
+        return true; // обычный переход
+    }
+    </script>
+</body>
+</html>
