@@ -54,7 +54,7 @@
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 8px;
             font-family: 'Nunito', sans-serif;
@@ -62,6 +62,10 @@
             backdrop-filter: blur(5px);
             transition: all 0.3s;
             border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .vk-back-button.visible {
+            display: flex;
         }
         
         .vk-back-button:hover {
@@ -624,11 +628,6 @@
             box-shadow: 0 4px 12px rgba(76, 117, 163, 0.3);
         }
         
-        .share-btn.tg { 
-            background: #0088cc; 
-            box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
-        }
-        
         .share-note {
             font-size: 14px;
             color: #666;
@@ -651,6 +650,10 @@
         .bot-link:hover {
             background: #2E7D32;
             transform: translateY(-2px);
+        }
+        
+        .bot-link i {
+            margin-right: 8px;
         }
         
         /* КНОПКИ ДЕЙСТВИЙ */
@@ -684,7 +687,7 @@
         
         .btn-channel {
             padding: 16px;
-            background: linear-gradient(135deg, #0088cc, #006699);
+            background: #4C75A3;
             color: white;
             border: none;
             border-radius: 16px;
@@ -700,8 +703,13 @@
         }
         
         .btn-channel:hover {
+            background: #3A5B7A;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,136,204,0.4);
+            box-shadow: 0 6px 16px rgba(76,117,163,0.4);
+        }
+        
+        .btn-channel i {
+            font-size: 18px;
         }
         
         /* АДАПТАЦИЯ */
@@ -746,6 +754,16 @@
                 padding: 6px 12px;
                 font-size: 12px;
             }
+            
+            .btn-channel {
+                padding: 14px;
+                font-size: 14px;
+            }
+            
+            .bot-link {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -754,17 +772,24 @@
     // Инициализация VK Mini App
     try {
         if (typeof vkBridge !== 'undefined') {
-            vkBridge.send('VKWebAppInit');
-            console.log('VK Mini App инициализирован');
+            vkBridge.send('VKWebAppInit')
+                .then(() => {
+                    console.log('✅ VK Mini App инициализирован');
+                    // Показываем кнопку назад, если мы внутри VK
+                    if (window.location !== window.parent.location) {
+                        document.getElementById('vk-back-button').classList.add('visible');
+                    }
+                })
+                .catch(e => console.log('ℹ️ Не в VK окружении'));
         }
     } catch (e) {
-        console.log('Не в VK окружении');
+        console.log('Ошибка VK:', e);
     }
     </script>
 
     <div class="app-container">
         <!-- Кнопка назад для VK -->
-        <button class="vk-back-button" id="vk-back-button" style="display: none;">
+        <button class="vk-back-button" id="vk-back-button">
             <i class="fas fa-arrow-left"></i> Назад
         </button>
         
@@ -859,7 +884,7 @@
             </div>
         </div>
         
-        <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ -->
+        <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ (ОБНОВЛЕННЫЙ) -->
         <div class="screen" id="results-screen">
             <div class="results-header">
                 <div class="results-logo">🏆</div>
@@ -877,13 +902,11 @@
                     <button class="share-btn vk" id="share-vk">
                         <i class="fab fa-vk"></i>
                     </button>
-                    <button class="share-btn tg" id="share-tg">
-                        <i class="fab fa-telegram"></i>
-                    </button>
+                    <!-- Кнопка Telegram удалена -->
                 </div>
-                <p class="share-note">Тест доступен в Telegram мини-приложении:</p>
-                <a href="https://t.me/PlantSurvivorbot/test" target="_blank" class="bot-link">
-                    <i class="fab fa-telegram"></i> Plant Survivor Mini App
+                <p class="share-note">Вернуться ко всем тестам:</p>
+                <a href="index.html" class="bot-link">
+                    <i class="fas fa-home"></i> На главную
                 </a>
             </div>
             
@@ -891,14 +914,27 @@
                 <button class="btn-restart" id="restart-btn">
                     <i class="fas fa-redo"></i> Пройти еще раз
                 </button>
-                <a href="https://t.me/geyzerrr_A" target="_blank" class="btn-channel">
-                    <i class="fab fa-telegram"></i> Создано @geyzerrr
+                <a href="https://vk.com/geyzerrr_blog" target="_blank" class="btn-channel">
+                    <i class="fab fa-vk"></i> Создано Geyzerrr
                 </a>
             </div>
         </div>
     </div>
     
     <script>
+        // Кнопка назад
+        document.getElementById('vk-back-button').addEventListener('click', function() {
+            try {
+                if (typeof vkBridge !== 'undefined') {
+                    vkBridge.send('VKWebAppClose', { status: 'success' });
+                } else {
+                    window.history.back();
+                }
+            } catch (e) {
+                window.history.back();
+            }
+        });
+
         // ДАННЫЕ ВОПРОСОВ
         const QUIZ_DATA = [
             {
@@ -1008,12 +1044,10 @@
             const resultsContainer = document.getElementById('results-container');
             const restartBtn = document.getElementById('restart-btn');
             const shareVkBtn = document.getElementById('share-vk');
-            const shareTgBtn = document.getElementById('share-tg');
             const loaderProgress = document.querySelector('.loader-progress');
             const loaderStatus = document.getElementById('loader-status');
             const processingStatus = document.getElementById('processing-status');
             const processingProgress = document.getElementById('processing-progress');
-            const vkBackButton = document.getElementById('vk-back-button');
             
             const steps = {
                 step1: document.getElementById('step1'),
@@ -1027,30 +1061,16 @@
             let userAnswers = {};
             let topPlants = [];
             
-            // ИНИЦИАЛИЗАЦИЯ VK
-            try {
-                if (vkBridge && window.location !== window.parent.location) {
-                    vkBackButton.style.display = 'flex';
-                    
-                    vkBackButton.addEventListener('click', function() {
-                        vkBridge.send('VKWebAppClose', { status: 'success' });
-                    });
-                }
-            } catch (e) {
-                console.log('Не удалось показать кнопку назад');
-            }
-            
             // ИНИЦИАЛИЗАЦИЯ
             initApp();
             
             function initApp() {
-                // Автозапуск загрузки (3 секунды)
+                // Автозапуск загрузки
                 startLoadingSequence();
                 
                 // Обработчики кнопок
                 restartBtn.addEventListener('click', restartQuiz);
-                shareVkBtn.addEventListener('click', () => shareResult('vk'));
-                shareTgBtn.addEventListener('click', () => shareResult('telegram'));
+                shareVkBtn.addEventListener('click', () => shareResult());
             }
             
             function startLoadingSequence() {
@@ -1072,13 +1092,12 @@
                     
                     if (progress >= 100) {
                         clearInterval(interval);
-                        // Переходим к тесту
                         setTimeout(() => {
                             switchScreen(screens.loading, screens.quiz);
                             loadQuestion();
                         }, 300);
                     }
-                }, 30); // 3 секунды загрузки (100% / 30ms)
+                }, 30);
             }
             
             function switchScreen(fromScreen, toScreen) {
@@ -1089,17 +1108,14 @@
             function loadQuestion() {
                 const question = QUIZ_DATA[currentQuestionIndex];
                 
-                // Обновляем UI
                 questionTitle.textContent = question.title;
                 questionHint.textContent = question.hint;
                 currentQuestionEl.textContent = currentQuestionIndex + 1;
                 progressText.textContent = `Вопрос ${currentQuestionIndex + 1}/8`;
                 progressFill.style.width = `${(currentQuestionIndex + 1) * 12.5}%`;
                 
-                // Очищаем контейнер с вариантами
                 optionsContainer.innerHTML = '';
                 
-                // Добавляем варианты ответов
                 question.options.forEach((option) => {
                     const optionBtn = document.createElement('button');
                     optionBtn.className = 'option-btn';
@@ -1108,25 +1124,19 @@
                         <span class="option-text">${option.text}</span>
                     `;
                     
-                    // Проверяем, выбран ли этот вариант ранее
                     const questionKey = `q${currentQuestionIndex + 1}`;
                     if (userAnswers[questionKey] === option.value) {
                         optionBtn.classList.add('selected');
                     }
                     
                     optionBtn.addEventListener('click', () => {
-                        // Снимаем выделение со всех кнопок
                         document.querySelectorAll('.option-btn').forEach(btn => {
                             btn.classList.remove('selected');
                         });
                         
-                        // Выделяем выбранную кнопку
                         optionBtn.classList.add('selected');
-                        
-                        // Сохраняем ответ
                         userAnswers[`q${currentQuestionIndex + 1}`] = option.value;
                         
-                        // Автоматически переходим дальше через 0.5 секунды
                         setTimeout(() => {
                             goToNextQuestion();
                         }, 500);
@@ -1137,18 +1147,12 @@
             }
             
             function goToNextQuestion() {
-                // Увеличиваем номер вопроса
                 currentQuestionIndex++;
                 
-                // Проверяем, закончился ли тест
                 if (currentQuestionIndex >= QUIZ_DATA.length) {
-                    // Переход к экрану обработки
                     switchScreen(screens.quiz, screens.processing);
-                    
-                    // Запускаем обработку с прогресс-баром
                     startProcessingSequence();
                 } else {
-                    // Загружаем следующий вопрос
                     loadQuestion();
                 }
             }
@@ -1157,7 +1161,6 @@
                 let progress = 0;
                 if (processingProgress) processingProgress.style.width = '0%';
                 
-                // Сброс шагов
                 Object.values(steps).forEach(step => {
                     if (step) {
                         step.classList.remove('active');
@@ -1170,7 +1173,6 @@
                     progress += 1;
                     if (processingProgress) processingProgress.style.width = `${progress}%`;
                     
-                    // Обновляем шаги
                     if (progress >= 25 && steps.step1) {
                         steps.step1.classList.add('active');
                         if (processingStatus) processingStatus.textContent = "Анализируем освещение...";
@@ -1193,60 +1195,46 @@
                     if (progress >= 100) {
                         clearInterval(interval);
                         
-                        // Рассчитываем результаты
                         calculateResults();
                         
-                        // Переходим к результатам через 1 секунду
                         setTimeout(() => {
                             switchScreen(screens.processing, screens.results);
                             showResults();
                         }, 1000);
                     }
-                }, 30); // 3 секунды обработки
+                }, 30);
             }
             
             function calculateResults() {
-                // Анализируем профиль пользователя на основе ответов
                 const userProfile = analyzeUserProfile();
                 
                 console.log("Профиль пользователя:", userProfile);
                 
-                // Рассчитываем score для каждого растения ИЗ НАШЕЙ БАЗЫ
                 const plantScores = ALL_CLASSIFIED_PLANTS.map(plant => {
-                    let score = plant.score; // Базовый score из классификации
+                    let score = plant.score;
                     
-                    // 1. Совпадение по освещению
                     if (userProfile.light === 'low' && plant.light === 'low') score += 15;
                     if (userProfile.light === 'medium' && plant.light === 'medium') score += 10;
                     if (userProfile.light === 'high' && plant.light === 'high') score += 15;
                     if (userProfile.light === 'any' && plant.light === 'any') score += 20;
                     
-                    // 2. Совпадение по поливу
                     if (userProfile.water === 'rare' && plant.water === 'rare') score += 25;
                     if (userProfile.water === 'moderate' && plant.water === 'moderate') score += 15;
                     if (userProfile.water === 'frequent' && plant.water === 'frequent') score += 10;
                     
-                    // 3. Совпадение по сложности (на основе опыта пользователя)
                     if (userProfile.experience === 'easy' && plant.difficulty === 'easy') score += 20;
                     if (userProfile.experience === 'medium' && plant.difficulty === 'medium') score += 15;
                     if (userProfile.experience === 'hard' && plant.difficulty === 'hard') score += 10;
                     
-                    // 4. Бонус за высокую выживаемость
                     if (plant.score >= 9) score += 10;
                     
-                    // Ограничиваем score 0-100
                     score = Math.max(0, Math.min(100, score));
                     
-                    // Переводим значения для отображения
                     const waterText = plant.water === 'rare' ? 'редкий' : 
                                      plant.water === 'moderate' ? 'умеренный' : 'частый';
                     
                     const difficultyText = plant.difficulty === 'easy' ? 'легкая' :
                                          plant.difficulty === 'medium' ? 'средняя' : 'сложная';
-                    
-                    const lightText = plant.light === 'low' ? 'тенелюбивое' :
-                                     plant.light === 'medium' ? 'умеренный свет' :
-                                     plant.light === 'high' ? 'светолюбивое' : 'любое освещение';
                     
                     return {
                         id: plant.id,
@@ -1254,25 +1242,20 @@
                         score: Math.round(score),
                         water: waterText,
                         difficulty: difficultyText,
-                        light: lightText,
-                        description: getRandomPlantDescription(),
-                        survivability: plant.score // оригинальный score выживаемости
+                        description: getRandomPlantDescription()
                     };
                 });
                 
-                // Сортируем по score и берем топ-3
                 plantScores.sort((a, b) => b.score - a.score);
                 topPlants = plantScores.slice(0, 3);
                 
-                console.log("Топ-3 растения для пользователя:", topPlants);
+                console.log("Топ-3 растения:", topPlants);
             }
             
             function analyzeUserProfile() {
-                // Определяем освещение на основе ответов
-                let light = 'medium'; // по умолчанию
-                const windows = userAnswers.q1;
-                const direction = userAnswers.q2;
+                let light = 'medium';
                 const location = userAnswers.q3;
+                const direction = userAnswers.q2;
                 
                 if (location === 'подоконник') {
                     if (direction === 'юг') light = 'high';
@@ -1282,32 +1265,23 @@
                     light = 'medium';
                 } else if (location === 'глубина') {
                     light = 'low';
-                } else if (location === 'влажно') {
-                    light = 'medium';
                 }
                 
-                // Определяем полив
                 let water = 'moderate';
                 const watering = userAnswers.q6;
                 if (watering === 'забываю') water = 'rare';
                 else if (watering === 'заливаю') water = 'frequent';
-                else water = 'moderate';
                 
-                // Определяем сложность (на основе опыта)
                 let experience = 'easy';
                 const exp = userAnswers.q8;
-                if (exp === 'новичок') experience = 'easy';
-                else if (exp === 'неудачник') experience = 'easy';
-                else if (exp === 'опытный') experience = 'medium';
+                if (exp === 'опытный') experience = 'medium';
                 
                 return { light, water, experience };
             }
             
             function showResults() {
-                // Очищаем контейнер результатов
                 resultsContainer.innerHTML = '';
                 
-                // Добавляем карточки растений
                 const medals = ['🥇', '🥈', '🥉'];
                 const medalClasses = ['gold', 'silver', 'bronze'];
                 
@@ -1337,14 +1311,15 @@
                 });
             }
             
-            function shareResult(platform) {
-                if (!topPlants.length) return;
+            // ОБНОВЛЕННАЯ ФУНКЦИЯ ШЕРИНГА (только VK)
+            function shareResult() {
+                if (!topPlants.length) {
+                    alert('Сначала пройдите тест');
+                    return;
+                }
                 
-                // ССЫЛКА НА МИНИ-АПП
-                const appUrl = 'https://t.me/PlantSurvivorbot/test';
-                const vkAppUrl = 'https://vk.com/app54467162'; // ЗАМЕНИТЕ НА ID ВАШЕГО ПРИЛОЖЕНИЯ
+                const vkAppUrl = 'https://vk.com/app54467162';
                 
-                // Форматируем текст для шеринга
                 const shareText = `🌱 Plant Survivor подобрал мне идеальные растения!\n\n` +
                                `🥇 ${topPlants[0].name} - ${topPlants[0].score}% совместимость\n` +
                                `${topPlants[0].description}\n\n` +
@@ -1352,56 +1327,32 @@
                                `🥉 ${topPlants[2]?.name || ''} - ${topPlants[2]?.score || ''}%\n\n` +
                                `Найди своего зеленого выживальщика! 👇\n`;
                 
-                let shareUrl = '';
-                
-                switch(platform) {
-                    case 'vk':
-                        // Пытаемся использовать VK Bridge
-                        try {
-                            if (typeof vkBridge !== 'undefined') {
-                                vkBridge.send('VKWebAppShowShareBox', {
-                                    text: shareText,
-                                    link: vkAppUrl
-                                }).catch(() => {
-                                    // Fallback на обычный шеринг
-                                    shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Plant Survivor&description=${encodeURIComponent(shareText)}&noparse=true`;
-                                    window.open(shareUrl, '_blank', 'width=600,height=500');
-                                });
-                                return;
-                            }
-                        } catch (e) {
-                            console.log('Ошибка VK шеринга');
-                        }
-                        
-                        shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Plant Survivor&description=${encodeURIComponent(shareText)}&noparse=true`;
-                        break;
-                        
-                    case 'telegram':
-                        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(shareText + appUrl)}`;
-                        break;
-                }
-                
-                if (shareUrl) {
-                    // Открываем в новом окне
-                    const width = 600;
-                    const height = 500;
-                    const left = (window.innerWidth - width) / 2;
-                    const top = (window.innerHeight - height) / 2;
-                    
-                    window.open(shareUrl, '_blank', `width=${width},height=${height},top=${top},left=${left}`);
+                try {
+                    if (typeof vkBridge !== 'undefined') {
+                        vkBridge.send('VKWebAppShowShareBox', {
+                            text: shareText,
+                            link: vkAppUrl
+                        }).catch(() => {
+                            const shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Plant Survivor&description=${encodeURIComponent(shareText)}&noparse=true`;
+                            window.open(shareUrl, '_blank', 'width=600,height=500');
+                        });
+                    } else {
+                        const shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Plant Survivor&description=${encodeURIComponent(shareText)}&noparse=true`;
+                        window.open(shareUrl, '_blank', 'width=600,height=500');
+                    }
+                } catch (e) {
+                    console.error('Ошибка шеринга:', e);
+                    alert('Не удалось поделиться результатом');
                 }
             }
             
             function restartQuiz() {
-                // Сброс данных
                 currentQuestionIndex = 0;
                 userAnswers = {};
                 topPlants = [];
                 
-                // Переход к загрузке
                 switchScreen(screens.results, screens.loading);
                 
-                // Перезапуск загрузки
                 setTimeout(() => {
                     startLoadingSequence();
                 }, 300);
