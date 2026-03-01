@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Грунтовед 🌱</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- VK Bridge для интеграции с VK Mini Apps -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    
+    <style>
+        /* СБРОС СТИЛЕЙ */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        /* ОСНОВНЫЕ СТИЛИ */
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #795548 0%, #5D4037 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .app-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            min-height: 600px;
+            position: relative;
+        }
+        
+        /* КНОПКА НАЗАД ДЛЯ VK */
+        .vk-back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1100;
+            background: rgba(121, 85, 72, 0.2);
+            border: none;
+            color: #5D4037;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .vk-back-button:hover {
+            background: rgba(121, 85, 72, 0.3);
+            transform: translateX(-2px);
+        }
+        
+        /* ЭКРАНЫ */
+        .screen {
+            display: none;
+            padding: 30px 20px;
+            min-height: 600px;
+        }
+        
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* ЭКРАН ЗАГРУЗКИ */
+        #loading-screen {
+            text-align: center;
+            background: linear-gradient(135deg, #8D6E63 0%, #5D4037 100%);
+            color: white;
+        }
+        
+        .logo-container {
+            margin: 40px 0;
+        }
+        
+        .logo-svg {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .logo-svg .plant-emoji {
+            font-size: 90px;
+            animation: gentleFloat 3s infinite ease-in-out;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+        
+        @keyframes gentleFloat {
+            0%, 100% { 
+                transform: translateY(0px);
+            }
+            50% { 
+                transform: translateY(-15px);
+            }
+        }
+        
+        h1 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .loader-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+        
+        .loader-bar {
+            width: 100%;
+            max-width: 280px;
+            height: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 0 auto 15px;
+        }
+        
+        .loader-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #FF9800, #FF5722);
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+        
+        .loader-text {
+            font-size: 14px;
+            font-style: italic;
+            opacity: 0.8;
+            margin-bottom: 40px;
+        }
+        
+        .loading-stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 300px;
+            margin: 40px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #FF9800;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        /* ЭКРАН ВЫБОРА СЕМЕЙСТВА */
+        .screen-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .screen-title {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 28px;
+            color: #5D4037;
+            margin-bottom: 10px;
+        }
+        
+        .screen-subtitle {
+            font-size: 16px;
+            color: #8D6E63;
+            margin-bottom: 30px;
+        }
+        
+        .plant-search {
+            margin-bottom: 30px;
+        }
+        
+        .search-label {
+            display: block;
+            font-weight: 600;
+            color: #5D4037;
+            margin-bottom: 12px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .search-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border: 2px solid #D7CCC8;
+            border-radius: 16px;
+            font-size: 16px;
+            font-family: 'Nunito', sans-serif;
+            transition: all 0.3s;
+            background: #FAFAFA;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #8D6E63;
+            background: white;
+            box-shadow: 0 4px 15px rgba(141,110,99,0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #8D6E63;
+        }
+        
+        .search-hint {
+            font-size: 14px;
+            color: #A1887F;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
+        .search-results {
+            background: #F5F5F5;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 2px dashed #D7CCC8;
+            display: none;
+        }
+        
+        .search-results.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .search-match {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #8D6E63;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .search-match:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(141,110,99,0.2);
+        }
+        
+        .search-match-title {
+            font-weight: 800;
+            color: #5D4037;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .search-match-subtitle {
+            font-size: 14px;
+            color: #8D6E63;
+        }
+        
+        .or-divider {
+            text-align: center;
+            margin: 25px 0;
+            position: relative;
+        }
+        
+        .or-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #D7CCC8;
+        }
+        
+        .or-text {
+            background: white;
+            padding: 0 20px;
+            color: #8D6E63;
+            font-weight: 700;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .family-select-label {
+            display: block;
+            font-weight: 600;
+            color: #5D4037;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .families-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .family-btn {
+            background: #F5F5F5;
+            border: 2px solid #D7CCC8;
+            padding: 18px 10px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+            color: #5D4037;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-height: 100px;
+            justify-content: center;
+        }
+        
+        .family-btn:hover {
+            background: #EFEBE9;
+            transform: translateY(-2px);
+        }
+        
+        .family-btn.selected {
+            background: #8D6E63;
+            color: white;
+            border-color: #5D4037;
+            box-shadow: 0 4px 15px rgba(141,110,99,0.3);
+        }
+        
+        .family-emoji {
+            font-size: 32px;
+            transition: transform 0.3s;
+        }
+        
+        .family-btn.selected .family-emoji {
+            transform: scale(1.2);
+        }
+        
+        /* ЭКРАН ОБРАБОТКИ */
+        #processing-screen {
+            text-align: center;
+            background: linear-gradient(135deg, #8D6E63 0%, #5D4037 100%);
+            color: white;
+            padding-top: 60px;
+        }
+        
+        .processing-logo {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .processing-logo .search-emoji {
+            font-size: 90px;
+            animation: searchPulse 1.5s infinite ease-in-out, rotateSearch 30s infinite linear;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+            transform-origin: center center;
+        }
+        
+        @keyframes searchPulse {
+            0%, 100% { 
+                transform: scale(1) rotate(0deg); 
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.15) rotate(180deg); 
+                opacity: 0.8;
+            }
+        }
+        
+        @keyframes rotateSearch {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .processing-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+        
+        .processing-loader {
+            width: 100%;
+            max-width: 280px;
+            margin: 30px auto;
+        }
+        
+        .processing-bar {
+            height: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .processing-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #FF9800, #FF5722);
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+        
+        .processing-text {
+            font-size: 14px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+        
+        .processing-steps {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 280px;
+            margin: 30px auto 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 15px;
+            opacity: 0.5;
+            text-align: left;
+        }
+        
+        .step.active { 
+            opacity: 1; 
+            color: #FF9800;
+        }
+        
+        .step i { 
+            width: 24px; 
+            text-align: center; 
+        }
+        
+        /* ЭКРАН РЕЗУЛЬТАТОВ */
+        #results-screen {
+            padding: 30px 20px;
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .results-logo {
+            font-size: 60px;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .results-title {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 28px;
+            color: #5D4037;
+            margin-bottom: 5px;
+        }
+        
+        .results-subtitle {
+            font-size: 16px;
+            color: #8D6E63;
+            margin-top: 5px;
+        }
+        
+        .results-container {
+            margin-bottom: 30px;
+        }
+        
+        .result-card {
+            border: 3px solid #D7CCC8;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #F5F5F5, #EFEBE9);
+        }
+        
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .result-family {
+            display: inline-block;
+            background: #8D6E63;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .result-title {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 22px;
+            color: #5D4037;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            letter-spacing: -0.5px;
+        }
+        
+        .soil-components {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px dashed #A1887F;
+            margin-bottom: 25px;
+        }
+        
+        .component-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        
+        .component-item:last-child {
+            border-bottom: none;
+        }
+        
+        .component-emoji {
+            font-size: 28px;
+            width: 50px;
+            text-align: center;
+        }
+        
+        .component-content {
+            flex: 1;
+        }
+        
+        .component-name {
+            font-weight: 800;
+            color: #5D4037;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        
+        .component-percentage {
+            font-size: 14px;
+            color: #8D6E63;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .component-desc {
+            font-size: 13px;
+            color: #A1887F;
+            line-height: 1.4;
+        }
+        
+        .result-tips {
+            background: #E8F5E9;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .tips-title {
+            font-weight: 800;
+            color: #2E7D32;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tips-list {
+            list-style: none;
+        }
+        
+        .tip-item {
+            padding: 10px 0;
+            border-bottom: 1px dashed #A5D6A7;
+            font-size: 15px;
+            color: #1B5E20;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .tip-item:last-child {
+            border-bottom: none;
+        }
+        
+        .tip-icon {
+            color: #4CAF50;
+            margin-top: 3px;
+        }
+        
+        /* КНОПКИ ШЕРИНГА */
+        .share-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #D7CCC8;
+            text-align: center;
+        }
+        
+        .share-section h3 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            color: #5D4037;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .share-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        
+        .share-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .share-btn:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .share-btn.vk { 
+            background: #4C75A3; 
+            box-shadow: 0 4px 12px rgba(76, 117, 163, 0.3);
+        }
+        
+        .share-btn.tg { 
+            background: #0088cc; 
+            box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
+        }
+        
+        .share-note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .bot-link {
+            display: inline-block;
+            background: #8D6E63;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .bot-link:hover {
+            background: #5D4037;
+            transform: translateY(-2px);
+        }
+        
+        /* КНОПКИ ДЕЙСТВИЙ */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 30px;
+        }
+        
+        .btn-next, .btn-restart {
+            padding: 16px;
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            font-size: 17px;
+        }
+        
+        .btn-next:hover, .btn-restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255,152,0,0.4);
+        }
+        
+        .btn-next:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-channel {
+            padding: 16px;
+            background: linear-gradient(135deg, #0088cc, #006699);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-channel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,136,204,0.4);
+        }
+        
+        /* АДАПТАЦИЯ */
+        @media (max-width: 400px) {
+            .app-container {
+                border-radius: 16px;
+            }
+            
+            .screen {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+            
+            .screen-title {
+                font-size: 24px;
+            }
+            
+            .families-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .family-btn {
+                padding: 16px 8px;
+                font-size: 14px;
+                min-height: 90px;
+            }
+            
+            .result-title {
+                font-size: 20px;
+            }
+            
+            .logo-svg .plant-emoji,
+            .processing-logo .search-emoji {
+                font-size: 70px;
+            }
+            
+            .share-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            
+            .vk-back-button {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+        
+        /* АНИМАЦИИ */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <script>
+    // Инициализация VK Mini App
+    try {
+        if (typeof vkBridge !== 'undefined') {
+            vkBridge.send('VKWebAppInit');
+            console.log('VK Mini App инициализирован');
+        }
+    } catch (e) {
+        console.log('Не в VK окружении');
+    }
+    </script>
+
+    <div class="app-container">
+        <!-- Кнопка назад для VK -->
+        <button class="vk-back-button" id="vk-back-button" style="display: none;">
+            <i class="fas fa-arrow-left"></i> Назад
+        </button>
+        
+        <!-- ЭКРАН 1: ЗАГРУЗКА -->
+        <div class="screen active" id="loading-screen">
+            <div class="logo-container">
+                <div class="logo-svg">
+                    <div class="plant-emoji">🌿</div>
+                </div>
+                <h1>Грунтовед</h1>
+                <div class="loader-subtitle">Запускаем анализатор почвы...</div>
+            </div>
+            
+            <div class="loader-bar">
+                <div class="loader-progress" id="loader-progress"></div>
+            </div>
+            <div class="loader-text" id="loader-status">Загружаем базу грунтов...</div>
+            
+            <div class="loading-stats">
+                <div>
+                    <span class="stat-number">35</span>
+                    <span class="stat-label">семейств</span>
+                </div>
+                <div>
+                    <span class="stat-number">180+</span>
+                    <span class="stat-label">растений</span>
+                </div>
+                <div>
+                    <span class="stat-number">∞</span>
+                    <span class="stat-label">рецептов</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ЭКРАН 2: ВЫБОР СЕМЕЙСТВА -->
+        <div class="screen" id="selection-screen">
+            <div class="screen-header">
+                <h2 class="screen-title">Конструктор грунтов</h2>
+                <p class="screen-subtitle">Найдем идеальную почву для вашего растения</p>
+            </div>
+            
+            <div class="plant-search">
+                <label class="search-label">
+                    <i class="fas fa-search"></i>
+                    Не знаете семейство?
+                </label>
+                <div class="search-input-container">
+                    <input type="text" 
+                           class="search-input" 
+                           id="plant-search-input" 
+                           placeholder="Введите название растения...">
+                    <div class="search-icon">🌱</div>
+                </div>
+                <p class="search-hint">Например: "монстера", "фикус", "орхидея"</p>
+                
+                <div class="search-results" id="search-results">
+                    <!-- Результаты поиска будут здесь -->
+                </div>
+            </div>
+            
+            <div class="or-divider">
+                <span class="or-text">ИЛИ</span>
+            </div>
+            
+            <div class="family-selection">
+                <label class="family-select-label">
+                    <i class="fas fa-seedling"></i>
+                    Выберите семейство растений:
+                </label>
+                
+                <div class="families-container" id="families-container">
+                    <!-- Кнопки семейств будут здесь -->
+                </div>
+            </div>
+            
+            <!-- Кнопка удалена - теперь переход на прелодер автоматический -->
+        </div>
+        
+        <!-- ЭКРАН 3: ОБРАБОТКИ -->
+        <div class="screen" id="processing-screen">
+            <div class="processing-logo">
+                <div class="search-emoji">🔍</div>
+            </div>
+            
+            <h2>Создаем рецепт...</h2>
+            <p class="processing-subtitle">Анализируем потребности растения</p>
+            
+            <div class="processing-loader">
+                <div class="processing-bar">
+                    <div class="processing-progress" id="processing-progress"></div>
+                </div>
+                <div class="processing-text" id="processing-status">Инициализация...</div>
+            </div>
+            
+            <div class="processing-steps">
+                <div class="step" id="step1">
+                    <i class="fas fa-check"></i>
+                    <span>Анализ семейства</span>
+                </div>
+                <div class="step" id="step2">
+                    <i class="fas fa-check"></i>
+                    <span>Подбор компонентов</span>
+                </div>
+                <div class="step" id="step3">
+                    <i class="fas fa-check"></i>
+                    <span>Расчет пропорций</span>
+                </div>
+                <div class="step" id="step4">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Формирование рецепта</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ -->
+        <div class="screen" id="results-screen">
+            <div class="results-header">
+                <div class="results-logo">🌱</div>
+                <h2 class="results-title">Ваш рецепт грунта</h2>
+                <p class="results-subtitle">Идеальный состав для здорового роста</p>
+            </div>
+            
+            <div class="results-container" id="results-container">
+                <!-- Карточка результата будет здесь -->
+            </div>
+            
+            <div class="share-section">
+                <h3><i class="fas fa-share-alt"></i> Поделиться рецептом</h3>
+                <div class="share-buttons">
+                    <button class="share-btn vk" id="share-vk">
+                        <i class="fab fa-vk"></i>
+                    </button>
+                    <button class="share-btn tg" id="share-tg">
+                        <i class="fab fa-telegram"></i>
+                    </button>
+                </div>
+                <p class="share-note">Тест доступен в Telegram мини-приложении:</p>
+                <a href="https://t.me/PlantSurvivorbot/test" target="_blank" class="bot-link">
+                    <i class="fab fa-telegram"></i> Plant Survivor Mini App
+                </a>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn-restart" id="restart-btn">
+                    <i class="fas fa-redo"></i> Новый рецепт
+                </button>
+                <a href="https://t.me/geyzerrr_A" target="_blank" class="btn-channel">
+                    <i class="fab fa-telegram"></i> Создано @geyzerrr
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // БАЗА ДАННЫХ РАСТЕНИЙ И СЕМЕЙСТВ (обновленная по семействва.txt)
+        const PLANT_DATABASE = {
+            // Акантовые
+            "кроссандра": { family: "Акантовые", emoji: "🌺" },
+            "фиттония": { family: "Акантовые", emoji: "🌺" },
+            "тунбергия": { family: "Акантовые", emoji: "🌺" },
+            
+            // Аизовые
+            "литопс": { family: "Аизовые", emoji: "🪨" },
+            "литопсы": { family: "Аизовые", emoji: "🪨" },
+            
+            // Амариллисовые
+            "амариллис": { family: "Амариллисовые", emoji: "🌺" },
+            
+            // Анакампсеровые
+            "анакампсерос": { family: "Анакампсеровые", emoji: "🌿" },
+            
+            // Ароидные
+            "алоказия": { family: "Ароидные", emoji: "🍃" },
+            "антуриум": { family: "Ароидные", emoji: "🍃" },
+            "диффенбахия": { family: "Ароидные", emoji: "🍃" },
+            "замиокулькас": { family: "Ароидные", emoji: "🍃" },
+            "монстера": { family: "Ароидные", emoji: "🍃" },
+            "спатифиллум": { family: "Ароидные", emoji: "🍃" },
+            "филодендрон": { family: "Ароидные", emoji: "🍃" },
+            "эпипремнум": { family: "Ароидные", emoji: "🍃" },
+            "сингониум": { family: "Ароидные", emoji: "🍃" },
+            "аглаонема": { family: "Ароидные", emoji: "🍃" },
+            "каладиум": { family: "Ароидные", emoji: "🍃" },
+            
+            // Аралиевые
+            "плющ": { family: "Аралиевые", emoji: "🌿" },
+            
+            // Асфоделовые
+            "алоэ": { family: "Асфоделовые", emoji: "🌵" },
+            "гастерия": { family: "Асфоделовые", emoji: "🌵" },
+            "хавортия": { family: "Асфоделовые", emoji: "🌵" },
+            
+            // Астровые
+            "крестовник": { family: "Астровые", emoji: "🌼" },
+            "гинура": { family: "Астровые", emoji: "🌼" },
+            
+            // Банановые
+            "банан": { family: "Банановые", emoji: "🍌" },
+            
+            // Бегониевые
+            "бегония": { family: "Бегониевые", emoji: "🌺" },
+            
+            // Бигнониевые
+            "текоманта": { family: "Бигнониевые", emoji: "🌺" },
+            
+            // Бобовые
+            "баухиния": { family: "Бобовые", emoji: "🦋" },
+            "эритрина": { family: "Бобовые", emoji: "🦋" },
+            "мимоза": { family: "Бобовые", emoji: "🦋" },
+            "акация": { family: "Бобовые", emoji: "🦋" },
+            
+            // Бромелиевые
+            "бромелия": { family: "Бромелиевые", emoji: "🌺" },
+            "ананас": { family: "Бромелиевые", emoji: "🍍" },
+            "тилландсия": { family: "Бромелиевые", emoji: "🌺" },
+            "гузмания": { family: "Бромелиевые", emoji: "🌺" },
+            "вриезия": { family: "Бромелиевые", emoji: "🌺" },
+            "эхмея": { family: "Бромелиевые", emoji: "🌺" },
+            
+            // Виноградовые
+            "циссус": { family: "Виноградовые", emoji: "🍇" },
+            
+            // Гераниевые
+            "пеларгония": { family: "Гераниевые", emoji: "🌺" },
+            "герань": { family: "Гераниевые", emoji: "🌺" },
+            
+            // Геснериевые
+            "ахименез": { family: "Геснериевые", emoji: "💜" },
+            "эписция": { family: "Геснериевые", emoji: "💜" },
+            "эсхинантус": { family: "Геснериевые", emoji: "💜" },
+            "нематантус": { family: "Геснериевые", emoji: "💜" },
+            "сенполия": { family: "Геснериевые", emoji: "💜" },
+            "фиалка": { family: "Геснериевые", emoji: "💜" },
+            "глоксиния": { family: "Геснериевые", emoji: "💜" },
+            "стрептокарпус": { family: "Геснериевые", emoji: "💜" },
+            
+            // Диоскорейные
+            "така": { family: "Диоскорейные", emoji: "🌿" },
+            "дискорея": { family: "Диоскорейные", emoji: "🌿" },
+            
+            // Кактусовые
+            "кактус": { family: "Кактусовые", emoji: "🌵" },
+            "опунция": { family: "Кактусовые", emoji: "🌵" },
+            "эпифиллум": { family: "Кактусовые", emoji: "🌵" },
+            "шлюмбергера": { family: "Кактусовые", emoji: "🌵" },
+            "хатиора": { family: "Кактусовые", emoji: "🌵" },
+            "маммиллярия": { family: "Кактусовые", emoji: "🌵" },
+            "эхинопсис": { family: "Кактусовые", emoji: "🌵" },
+            "астрофитум": { family: "Кактусовые", emoji: "🌵" },
+            "цереус": { family: "Кактусовые", emoji: "🌵" },
+            
+            // Кариковые
+            "папайя": { family: "Кариковые", emoji: "🥭" },
+            
+            // Кипрейные
+            "фуксия": { family: "Кипрейные", emoji: "🌸" },
+            
+            // Коммелиновые
+            "каллизия": { family: "Коммелиновые", emoji: "🌿" },
+            "традесканция": { family: "Коммелиновые", emoji: "🌿" },
+            "мурданния": { family: "Коммелиновые", emoji: "🌿" },
+            "рео": { family: "Коммелиновые", emoji: "🌿" },
+            
+            // Крапивные
+            "пилея": { family: "Крапивные", emoji: "🌿" },
+            "солейролия": { family: "Крапивные", emoji: "🌿" },
+            
+            // Кутровые
+            "адениум": { family: "Кутровые", emoji: "🌺" },
+            "олеандр": { family: "Кутровые", emoji: "🌺" },
+            "мандевилла": { family: "Кутровые", emoji: "🌺" },
+            "плюмерия": { family: "Кутровые", emoji: "🌺" },
+            
+            // Ластовневые
+            "стефанотис": { family: "Ластовневые", emoji: "🌺" },
+            "хойя": { family: "Ластовневые", emoji: "🌺" },
+            "церопегия": { family: "Ластовневые", emoji: "🌺" },
+            "стапелия": { family: "Ластовневые", emoji: "🌺" },
+            
+            // Мальвовые
+            "абутилон": { family: "Мальвовые", emoji: "🌸" },
+            "гибискус": { family: "Мальвовые", emoji: "🌸" },
+            "пахира": { family: "Мальвовые", emoji: "🌸" },
+            
+            // Марантовые
+            "маранта": { family: "Марантовые", emoji: "🎯" },
+            "калатея": { family: "Марантовые", emoji: "🎯" },
+            "ктенанта": { family: "Марантовые", emoji: "🎯" },
+            "строманата": { family: "Марантовые", emoji: "🎯" },
+            
+            // Мареновые
+            "кофе": { family: "Мареновые", emoji: "☕" },
+            "гардения": { family: "Мареновые", emoji: "🌸" },
+            "иксора": { family: "Мареновые", emoji: "🌸" },
+            
+            // Маслиновые
+            "жасмин": { family: "Маслиновые", emoji: "🌸" },
+            "олива": { family: "Маслиновые", emoji: "🫒" },
+            "османтус": { family: "Маслиновые", emoji: "🌸" },
+            
+            // Миртовые
+            "каллистемон": { family: "Миртовые", emoji: "🌿" },
+            "мирт": { family: "Миртовые", emoji: "🌿" },
+            "эвкалипт": { family: "Миртовые", emoji: "🌿" },
+            "метросидерос": { family: "Миртовые", emoji: "🌿" },
+            
+            // Многоножковые
+            "платицериум": { family: "Многоножковые", emoji: "🌿" },
+            "флебодиум": { family: "Многоножковые", emoji: "🌿" },
+            "полиподиум": { family: "Многоножковые", emoji: "🌿" },
+            
+            // Молочайные
+            "молочай": { family: "Молочайные", emoji: "🌵" },
+            "педилантус": { family: "Молочайные", emoji: "🌵" },
+            "кротон": { family: "Молочайные", emoji: "🌵" },
+            "пуансеттия": { family: "Молочайные", emoji: "🌵" },
+            "акалифа": { family: "Молочайные", emoji: "🌵" },
+            
+            // Никтагиновые
+            "бугенвиллия": { family: "Никтагиновые", emoji: "🌸" },
+            "мирабилис": { family: "Никтагиновые", emoji: "🌸" },
+            
+            // Норичниковые
+            "будлея": { family: "Норичниковые", emoji: "🌸" },
+            "кальцеолярия": { family: "Норичниковые", emoji: "🌸" },
+            
+            // Орхидные
+            "орхидея": { family: "Орхидные", emoji: "🦋" },
+            "фаленопсис": { family: "Орхидные", emoji: "🦋" },
+            "дендробиум": { family: "Орхидные", emoji: "🦋" },
+            "цимбидиум": { family: "Орхидные", emoji: "🦋" },
+            "пафиопедилум": { family: "Орхидные", emoji: "🦋" },
+            "ванда": { family: "Орхидные", emoji: "🦋" },
+            "каттлея": { family: "Орхидные", emoji: "🦋" },
+            "онцидиум": { family: "Орхидные", emoji: "🦋" },
+            "мильтония": { family: "Орхидные", emoji: "🦋" },
+            
+            // Пальмовые
+            "пальма": { family: "Пальмовые", emoji: "🌴" },
+            "хамедорея": { family: "Пальмовые", emoji: "🌴" },
+            "финик": { family: "Пальмовые", emoji: "🌴" },
+            "вашингтония": { family: "Пальмовые", emoji: "🌴" },
+            "юкка": { family: "Пальмовые", emoji: "🌴" },
+            "драцена": { family: "Пальмовые", emoji: "🌴" },
+            "ливистона": { family: "Пальмовые", emoji: "🌴" },
+            "рапис": { family: "Пальмовые", emoji: "🌴" },
+            
+            // Пасленовые
+            "бругмансия": { family: "Пасленовые", emoji: "🌸" },
+            "паслен": { family: "Пасленовые", emoji: "🌸" },
+            "рантонетти": { family: "Пасленовые", emoji: "🌸" },
+            "соландра": { family: "Пасленовые", emoji: "🌸" },
+            "тамарилло": { family: "Пасленовые", emoji: "🍅" },
+            "пепино": { family: "Пасленовые", emoji: "🍈" },
+            "петуния": { family: "Пасленовые", emoji: "🌸" },
+            
+            // Перечные
+            "пеперомия": { family: "Перечные", emoji: "🌿" },
+            "перец": { family: "Перечные", emoji: "🌶️" },
+            
+            // Рутовые
+            "лимон": { family: "Рутовые", emoji: "🍋" },
+            "каламондин": { family: "Рутовые", emoji: "🍋" },
+            "муррайя": { family: "Рутовые", emoji: "🌸" },
+            "цитрус": { family: "Рутовые", emoji: "🍊" },
+            "апельсин": { family: "Рутовые", emoji: "🍊" },
+            "мандарин": { family: "Рутовые", emoji: "🍊" },
+            
+            // Саррацениевые
+            "саррацения": { family: "Саррацениевые", emoji: "🌿" },
+            
+            // Спаржевые
+            "агава": { family: "Спаржевые", emoji: "🌵" },
+            "аспидистра": { family: "Спаржевые", emoji: "🌿" },
+            "драцена": { family: "Спаржевые", emoji: "🌿" },
+            "нолина": { family: "Спаржевые", emoji: "🌿" },
+            "сансевиерия": { family: "Спаржевые", emoji: "🌿" },
+            "хлорофитум": { family: "Спаржевые", emoji: "🌿" },
+            "юкка": { family: "Спаржевые", emoji: "🌿" },
+            "аспарагус": { family: "Спаржевые", emoji: "🌿" },
+            
+            // Страстоцветные
+            "пассифлора": { family: "Страстоцветные", emoji: "🌺" },
+            
+            // Толстянковые
+            "крассула": { family: "Толстянковые", emoji: "🪴" },
+            "каланхоэ": { family: "Толстянковые", emoji: "🪴" },
+            "седум": { family: "Толстянковые", emoji: "🪴" },
+            "эхеверия": { family: "Толстянковые", emoji: "🪴" },
+            "эониум": { family: "Толстянковые", emoji: "🪴" },
+            "толстянка": { family: "Толстянковые", emoji: "🪴" },
+            "очиток": { family: "Толстянковые", emoji: "🪴" },
+            
+            // Тутовые
+            "фикус": { family: "Тутовые", emoji: "🌳" },
+            "инжир": { family: "Тутовые", emoji: "🌳" },
+            "шелковица": { family: "Тутовые", emoji: "🌳" },
+            
+            // Яснотковые
+            "колеус": { family: "Яснотковые", emoji: "🍃" },
+            "розмарин": { family: "Яснотковые", emoji: "🍃" },
+            "клеродендрум": { family: "Яснотковые", emoji: "🍃" },
+            "базилик": { family: "Яснотковые", emoji: "🍃" },
+            "мята": { family: "Яснотковые", emoji: "🍃" },
+            "мелисса": { family: "Яснотковые", emoji: "🍃" },
+            "шалфей": { family: "Яснотковые", emoji: "🍃" }
+        };
+
+        // БАЗА РЕЦЕПТОВ ГРУНТОВ ДЛЯ КАЖДОГО СЕМЕЙСТВА (упрощенная версия)
+        const SOIL_RECIPES = {
+            "Акантовые": {
+                components: [
+                    { emoji: "🌿", name: "Торф верховой", percentage: "40%", description: "Кислая среда" },
+                    { emoji: "🍂", name: "Листовой перегной", percentage: "25%", description: "Питательная основа" },
+                    { emoji: "🏖️", name: "Перлит", percentage: "20%", description: "Дренаж и аэрация" },
+                    { emoji: "🌲", name: "Хвойная земля", percentage: "10%", description: "Рыхлость" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "5%", description: "Антисептик" }
+                ],
+                tips: [
+                    "Поддерживайте умеренную влажность",
+                    "Предпочитают рассеянный свет",
+                    "Регулярно опрыскивайте листья"
+                ]
+            },
+            "Аизовые": {
+                components: [
+                    { emoji: "🏜️", name: "Крупный песок", percentage: "50%", description: "Основной дренаж" },
+                    { emoji: "🧱", name: "Кирпичная крошка", percentage: "25%", description: "Дополнительный дренаж" },
+                    { emoji: "🌿", name: "Дерновая земля", percentage: "15%", description: "Питательная основа" },
+                    { emoji: "🌋", name: "Вулканическая лава", percentage: "10%", description: "Минеральная добавка" }
+                ],
+                tips: [
+                    "Максимальный дренаж обязателен",
+                    "Полив редкий, только в период роста",
+                    "Яркое освещение"
+                ]
+            },
+            "Ароидные": {
+                components: [
+                    { emoji: "🌿", name: "Торф верховой", percentage: "30%", description: "Кислая среда" },
+                    { emoji: "🍂", name: "Листовой перегной", percentage: "25%", description: "Питательная основа" },
+                    { emoji: "🌲", name: "Хвойная земля", percentage: "20%", description: "Рыхлость и кислотность" },
+                    { emoji: "🏖️", name: "Перлит/Вермикулит", percentage: "15%", description: "Влагоемкость" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "10%", description: "Защита от гниения" }
+                ],
+                tips: [
+                    "Поддерживайте высокую влажность воздуха",
+                    "Избегайте прямых солнечных лучей",
+                    "Удобряйте в период активного роста"
+                ]
+            },
+            "Кактусовые": {
+                components: [
+                    { emoji: "🏜️", name: "Крупный песок", percentage: "40%", description: "Обеспечивает отличный дренаж" },
+                    { emoji: "🌋", name: "Вулканическая лава", percentage: "20%", description: "Минеральная добавка" },
+                    { emoji: "🍂", name: "Листовой перегной", percentage: "15%", description: "Питательные вещества" },
+                    { emoji: "🧱", name: "Кирпичная крошка", percentage: "15%", description: "Дренаж и аэрация" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "10%", description: "Антисептик" }
+                ],
+                tips: [
+                    "Добавьте 1 ст. ложку доломитовой муки на 1 л грунта",
+                    "Полив только после полного просыхания грунта",
+                    "Используйте горшки с дренажными отверстиями"
+                ]
+            },
+            "Орхидные": {
+                components: [
+                    { emoji: "🌲", name: "Кора сосны", percentage: "50%", description: "Основной субстрат" },
+                    { emoji: "🌰", name: "Мох сфагнум", percentage: "20%", description: "Влагоемкость" },
+                    { emoji: "🧱", name: "Керамзит", percentage: "15%", description: "Дренажный слой" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "10%", description: "Обеззараживание" },
+                    { emoji: "🥥", name: "Кокосовые чипсы", percentage: "5%", description: "Воздухопроницаемость" }
+                ],
+                tips: [
+                    "Субстрат должен просыхать между поливами",
+                    "Используйте прозрачные горшки для контроля корней",
+                    "Опрыскивайте воздушные корни"
+                ]
+            },
+            "Толстянковые": {
+                components: [
+                    { emoji: "🏜️", name: "Крупнозернистый песок", percentage: "35%", description: "Основной дренаж" },
+                    { emoji: "🌿", name: "Дерновая земля", percentage: "25%", description: "Питательная основа" },
+                    { emoji: "🍂", name: "Листовая земля", percentage: "20%", description: "Органические вещества" },
+                    { emoji: "🧱", name: "Кирпичная крошка", percentage: "15%", description: "Дополнительный дренаж" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "5%", description: "Антибактериальный эффект" }
+                ],
+                tips: [
+                    "Максимальный дренаж - залог успеха",
+                    "Поливайте умеренно, особенно зимой",
+                    "Предпочитают тесные горшки"
+                ]
+            },
+            "Бегониевые": {
+                components: [
+                    { emoji: "🌿", name: "Торф", percentage: "35%", description: "Кислая среда" },
+                    { emoji: "🍂", name: "Листовой перегной", percentage: "25%", description: "Питание" },
+                    { emoji: "🏖️", name: "Перлит", percentage: "20%", description: "Дренаж" },
+                    { emoji: "🌲", name: "Хвойная земля", percentage: "15%", description: "Рыхлость" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "5%", description: "Антисептик" }
+                ],
+                tips: [
+                    "Избегайте попадания воды на листья",
+                    "Умеренный полив",
+                    "Рассеянное освещение"
+                ]
+            },
+            "Геснериевые": {
+                components: [
+                    { emoji: "🌿", name: "Торф верховой", percentage: "40%", description: "Кислая среда" },
+                    { emoji: "🏖️", name: "Перлит", percentage: "25%", description: "Воздухопроницаемость" },
+                    { emoji: "🍂", name: "Листовой перегной", percentage: "20%", description: "Питательные вещества" },
+                    { emoji: "🌰", name: "Мох сфагнум", percentage: "10%", description: "Влагоемкость" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "5%", description: "Антисептик" }
+                ],
+                tips: [
+                    "Избегайте попадания воды на листья",
+                    "Поливайте через поддон",
+                    "Поддерживайте умеренную влажность"
+                ]
+            },
+            "Молочайные": {
+                components: [
+                    { emoji: "🏜️", name: "Крупный песок", percentage: "35%", description: "Дренаж" },
+                    { emoji: "🌿", name: "Дерновая земля", percentage: "30%", description: "Питание" },
+                    { emoji: "🍂", name: "Листовая земля", percentage: "20%", description: "Органика" },
+                    { emoji: "🧱", name: "Кирпичная крошка", percentage: "10%", description: "Аэрация" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "5%", description: "Защита" }
+                ],
+                tips: [
+                    "Осторожно с поливом - легко загнивают",
+                    "Нуждаются в ярком освещении",
+                    "Берегите от сквозняков"
+                ]
+            },
+            "Марантовые": {
+                components: [
+                    { emoji: "🌿", name: "Торф", percentage: "30%", description: "Кислая среда" },
+                    { emoji: "🍂", name: "Листовой перегной", percentage: "25%", description: "Питание" },
+                    { emoji: "🏖️", name: "Перлит", percentage: "20%", description: "Влагоемкость" },
+                    { emoji: "🌰", name: "Мох сфагнум", percentage: "15%", description: "Увлажнение" },
+                    { emoji: "🌲", name: "Хвойная земля", percentage: "10%", description: "Рыхлость" }
+                ],
+                tips: [
+                    "Высокая влажность воздуха обязательна",
+                    "Избегайте прямого солнца",
+                    "Поливайте мягкой отстоянной водой"
+                ]
+            },
+            "Спаржевые": {
+                components: [
+                    { emoji: "🌿", name: "Дерновая земля", percentage: "30%", description: "Питательная основа" },
+                    { emoji: "🍂", name: "Листовой перегной", percentage: "25%", description: "Органические вещества" },
+                    { emoji: "🏜️", name: "Крупный песок", percentage: "20%", description: "Дренаж" },
+                    { emoji: "🏖️", name: "Перлит", percentage: "15%", description: "Аэрация" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "10%", description: "Защита корней" }
+                ],
+                tips: [
+                    "Пересаживайте методом перевалки",
+                    "Обеспечьте хороший дренаж",
+                    "Регулярно опрыскивайте листья"
+                ]
+            },
+            "Бромелиевые": {
+                components: [
+                    { emoji: "🌲", name: "Кора сосны", percentage: "40%", description: "Воздухопроницаемая основа" },
+                    { emoji: "🌰", name: "Мох сфагнум", percentage: "30%", description: "Влагоемкость" },
+                    { emoji: "🥥", name: "Кокосовое волокно", percentage: "15%", description: "Рыхлость" },
+                    { emoji: "🏖️", name: "Перлит", percentage: "10%", description: "Аэрация" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "5%", description: "Антисептик" }
+                ],
+                tips: [
+                    "Поливайте в розетку листьев",
+                    "Поддерживайте высокую влажность",
+                    "Используйте эпифитные удобрения"
+                ]
+            },
+            "Тутовые": {
+                components: [
+                    { emoji: "🌿", name: "Дерновая земля", percentage: "35%", description: "Питательная основа" },
+                    { emoji: "🍂", name: "Листовой перегной", percentage: "25%", description: "Органика" },
+                    { emoji: "🏜️", name: "Песок", percentage: "20%", description: "Дренаж" },
+                    { emoji: "🏖️", name: "Перлит", percentage: "15%", description: "Аэрация" },
+                    { emoji: "⚫", name: "Древесный уголь", percentage: "5%", description: "Антисептик" }
+                ],
+                tips: [
+                    "Умеренный полив",
+                    "Яркое рассеянное освещение",
+                    "Регулярные подкормки в период роста"
+                ]
+            }
+            // Для остальных семейств можно использовать универсальный рецепт
+        };
+
+        // УНИВЕРСАЛЬНЫЙ РЕЦЕПТ ДЛЯ СЕМЕЙСТВ БЕЗ СПЕЦИФИЧЕСКОГО РЕЦЕПТА
+        const UNIVERSAL_RECIPE = {
+            components: [
+                { emoji: "🌿", name: "Универсальный грунт", percentage: "50%", description: "Базовая питательная смесь" },
+                { emoji: "🏖️", name: "Перлит", percentage: "20%", description: "Для дренажа и аэрации" },
+                { emoji: "🍂", name: "Листовой перегной", percentage: "15%", description: "Органические вещества" },
+                { emoji: "🏜️", name: "Песок", percentage: "10%", description: "Улучшение структуры" },
+                { emoji: "⚫", name: "Древесный уголь", percentage: "5%", description: "Антисептик" }
+            ],
+            tips: [
+                "Подберите индивидуальный уход по виду растения",
+                "Следите за влажностью грунта",
+                "Используйте дренаж на дне горшка"
+            ]
+        };
+
+        // ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ
+        document.addEventListener('DOMContentLoaded', function() {
+            // ЭЛЕМЕНТЫ
+            const screens = {
+                loading: document.getElementById('loading-screen'),
+                selection: document.getElementById('selection-screen'),
+                processing: document.getElementById('processing-screen'),
+                results: document.getElementById('results-screen')
+            };
+            
+            const plantSearchInput = document.getElementById('plant-search-input');
+            const searchResults = document.getElementById('search-results');
+            const familiesContainer = document.getElementById('families-container');
+            const resultsContainer = document.getElementById('results-container');
+            const restartBtn = document.getElementById('restart-btn');
+            const shareVkBtn = document.getElementById('share-vk');
+            const shareTgBtn = document.getElementById('share-tg');
+            const loaderStatus = document.getElementById('loader-status');
+            const processingStatus = document.getElementById('processing-status');
+            const processingProgress = document.getElementById('processing-progress');
+            const loaderProgress = document.getElementById('loader-progress');
+            const vkBackButton = document.getElementById('vk-back-button');
+            
+            const steps = {
+                step1: document.getElementById('step1'),
+                step2: document.getElementById('step2'),
+                step3: document.getElementById('step3'),
+                step4: document.getElementById('step4')
+            };
+            
+            // ДАННЫЕ ПРИЛОЖЕНИЯ
+            let selectedFamily = null;
+            let selectedFamilyName = '';
+            let selectedFamilyEmoji = '';
+            
+            // УНИКАЛЬНЫЕ СЕМЕЙСТВА ИЗ БАЗЫ
+            const uniqueFamilies = [...new Set(Object.values(PLANT_DATABASE).map(p => p.family))].sort();
+            const familyEmojis = {
+                "Акантовые": "🌺",
+                "Аизовые": "🪨",
+                "Амариллисовые": "🌺",
+                "Анакампсеровые": "🌿",
+                "Ароидные": "🍃",
+                "Аралиевые": "🌿",
+                "Асфоделовые": "🌵",
+                "Астровые": "🌼",
+                "Банановые": "🍌",
+                "Бегониевые": "🌺",
+                "Бигнониевые": "🌺",
+                "Бобовые": "🦋",
+                "Бромелиевые": "🌺",
+                "Виноградовые": "🍇",
+                "Гераниевые": "🌺",
+                "Геснериевые": "💜",
+                "Диоскорейные": "🌿",
+                "Кактусовые": "🌵",
+                "Кариковые": "🥭",
+                "Кипрейные": "🌸",
+                "Коммелиновые": "🌿",
+                "Крапивные": "🌿",
+                "Кутровые": "🌺",
+                "Ластовневые": "🌺",
+                "Мальвовые": "🌸",
+                "Марантовые": "🎯",
+                "Мареновые": "☕",
+                "Маслиновые": "🌸",
+                "Миртовые": "🌿",
+                "Многоножковые": "🌿",
+                "Молочайные": "🌵",
+                "Никтагиновые": "🌸",
+                "Норичниковые": "🌸",
+                "Орхидные": "🦋",
+                "Пальмовые": "🌴",
+                "Пасленовые": "🌸",
+                "Перечные": "🌿",
+                "Рутовые": "🍋",
+                "Саррацениевые": "🌿",
+                "Спаржевые": "🌿",
+                "Страстоцветные": "🌺",
+                "Толстянковые": "🪴",
+                "Тутовые": "🌳",
+                "Яснотковые": "🍃"
+            };
+            
+            // ИНИЦИАЛИЗАЦИЯ VK
+            try {
+                if (vkBridge && window.location !== window.parent.location) {
+                    vkBackButton.style.display = 'flex';
+                    
+                    vkBackButton.addEventListener('click', function() {
+                        vkBridge.send('VKWebAppClose', { status: 'success' });
+                    });
+                }
+            } catch (e) {
+                console.log('Не удалось показать кнопку назад');
+            }
+            
+            // ИНИЦИАЛИЗАЦИЯ
+            initApp();
+            
+            function initApp() {
+                // Автозапуск загрузки
+                startLoadingSequence();
+                
+                // Инициализация поиска
+                initSearch();
+                
+                // Инициализация выбора семейств
+                initFamilySelection();
+                
+                // Обработчики кнопок
+                restartBtn.addEventListener('click', restartApp);
+                shareVkBtn.addEventListener('click', () => shareResult('vk'));
+                shareTgBtn.addEventListener('click', () => shareResult('telegram'));
+            }
+            
+            function startLoadingSequence() {
+                let progress = 0;
+                loaderProgress.style.width = '0%';
+                
+                const interval = setInterval(() => {
+                    progress += 1;
+                    loaderProgress.style.width = `${progress}%`;
+                    
+                    if (progress <= 30) {
+                        loaderStatus.textContent = "Загружаем базу растений...";
+                    } else if (progress <= 60) {
+                        loaderStatus.textContent = "Анализируем семейства...";
+                    } else if (progress <= 90) {
+                        loaderStatus.textContent = "Формируем рецепты...";
+                    } else {
+                        loaderStatus.textContent = "Готово к работе!";
+                    }
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        // Переходим к выбору через небольшую задержку
+                        setTimeout(() => {
+                            switchScreen(screens.loading, screens.selection);
+                        }, 500);
+                    }
+                }, 30);
+            }
+            
+            function switchScreen(fromScreen, toScreen) {
+                console.log(`Переключаем экран с ${fromScreen.id} на ${toScreen.id}`);
+                fromScreen.classList.remove('active');
+                toScreen.classList.add('active');
+            }
+            
+            function initSearch() {
+                if (!plantSearchInput) return;
+                
+                plantSearchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    
+                    if (searchTerm.length < 2) {
+                        if (searchResults) searchResults.classList.remove('active');
+                        return;
+                    }
+                    
+                    // Поиск совпадений
+                    const matches = Object.entries(PLANT_DATABASE)
+                        .filter(([plantName, plantData]) => 
+                            plantName.includes(searchTerm) || 
+                            plantData.family.toLowerCase().includes(searchTerm)
+                        )
+                        .slice(0, 5);
+                    
+                    if (matches.length > 0 && searchResults) {
+                        searchResults.innerHTML = matches.map(([plantName, plantData]) => `
+                            <div class="search-match" data-family="${plantData.family}">
+                                <div class="search-match-title">${plantName.charAt(0).toUpperCase() + plantName.slice(1)}</div>
+                                <div class="search-match-subtitle">${plantData.emoji} Семейство: ${plantData.family}</div>
+                            </div>
+                        `).join('');
+                        
+                        // Добавляем обработчики клика
+                        searchResults.querySelectorAll('.search-match').forEach(match => {
+                            match.addEventListener('click', function() {
+                                const family = this.getAttribute('data-family');
+                                selectFamily(family);
+                                
+                                // Заполняем поле поиска названием растения
+                                const plantName = this.querySelector('.search-match-title').textContent;
+                                if (plantSearchInput) plantSearchInput.value = plantName;
+                                
+                                // Скрываем результаты
+                                if (searchResults) searchResults.classList.remove('active');
+                                
+                                // Автоматический переход на прелодер
+                                setTimeout(() => goToProcessing(), 500);
+                            });
+                        });
+                        
+                        searchResults.classList.add('active');
+                    } else if (searchResults) {
+                        searchResults.innerHTML = `
+                            <div class="search-match">
+                                <div class="search-match-title">Растение не найдено</div>
+                                <div class="search-match-subtitle">Попробуйте выбрать семейство вручную</div>
+                            </div>
+                        `;
+                        searchResults.classList.add('active');
+                    }
+                });
+                
+                // Скрываем результаты при клике вне
+                document.addEventListener('click', function(e) {
+                    if (plantSearchInput && !plantSearchInput.contains(e.target) && 
+                        searchResults && !searchResults.contains(e.target)) {
+                        searchResults.classList.remove('active');
+                    }
+                });
+            }
+            
+            function initFamilySelection() {
+                if (!familiesContainer) return;
+                
+                // Создаем кнопки для каждого семейства
+                familiesContainer.innerHTML = uniqueFamilies.map(family => {
+                    const emoji = familyEmojis[family] || "🌱";
+                    return `
+                        <button class="family-btn" data-family="${family}">
+                            <span class="family-emoji">${emoji}</span>
+                            <span class="family-text">${family}</span>
+                        </button>
+                    `;
+                }).join('');
+                
+                // Добавляем обработчики клика
+                familiesContainer.querySelectorAll('.family-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const family = this.getAttribute('data-family');
+                        selectFamily(family);
+                        
+                        // Сбрасываем поиск
+                        if (plantSearchInput) plantSearchInput.value = '';
+                        if (searchResults) searchResults.classList.remove('active');
+                        
+                        // Автоматический переход на прелодер
+                        setTimeout(() => goToProcessing(), 500);
+                    });
+                });
+            }
+            
+            function selectFamily(family) {
+                if (!family) return;
+                
+                // Снимаем выделение со всех кнопок
+                document.querySelectorAll('.family-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                // Выделяем выбранную кнопку
+                const selectedBtn = document.querySelector(`.family-btn[data-family="${family}"]`);
+                if (selectedBtn) {
+                    selectedBtn.classList.add('selected');
+                }
+                
+                // Сохраняем выбранное семейство
+                selectedFamily = SOIL_RECIPES[family] || UNIVERSAL_RECIPE;
+                selectedFamilyName = family;
+                selectedFamilyEmoji = familyEmojis[family] || "🌱";
+            }
+            
+            function goToProcessing() {
+                if (!selectedFamily) {
+                    showMessage('Пожалуйста, выберите семейство растений', 'error');
+                    return;
+                }
+                
+                console.log('Переход к обработке для семейства:', selectedFamilyName);
+                
+                // Переходим к экрану обработки
+                switchScreen(screens.selection, screens.processing);
+                
+                // Запускаем обработку с прогресс-баром
+                startProcessingSequence();
+            }
+            
+            function startProcessingSequence() {
+                let progress = 0;
+                if (processingProgress) processingProgress.style.width = '0%';
+                
+                // Сброс шагов
+                Object.values(steps).forEach(step => {
+                    if (step) {
+                        step.classList.remove('active');
+                        const icon = step.querySelector('i');
+                        if (icon) icon.className = 'fas fa-check';
+                    }
+                });
+                
+                const interval = setInterval(() => {
+                    progress += 1;
+                    if (processingProgress) processingProgress.style.width = `${progress}%`;
+                    
+                    // Обновляем шаги
+                    if (progress >= 25 && steps.step1) {
+                        steps.step1.classList.add('active');
+                        if (processingStatus) processingStatus.textContent = "Анализируем семейство...";
+                    }
+                    if (progress >= 50 && steps.step2) {
+                        steps.step2.classList.add('active');
+                        if (processingStatus) processingStatus.textContent = "Подбираем компоненты...";
+                    }
+                    if (progress >= 75 && steps.step3) {
+                        steps.step3.classList.add('active');
+                        if (processingStatus) processingStatus.textContent = "Рассчитываем пропорции...";
+                    }
+                    if (progress >= 90 && steps.step4) {
+                        steps.step4.classList.add('active');
+                        if (processingStatus) processingStatus.textContent = "Формируем рецепт...";
+                        const icon = steps.step4.querySelector('i');
+                        if (icon) icon.className = 'fas fa-spinner fa-spin';
+                    }
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        // Переходим к результатам через 1 секунду
+                        setTimeout(() => {
+                            console.log('Переход к результатам');
+                            switchScreen(screens.processing, screens.results);
+                            showResults();
+                        }, 1000);
+                    }
+                }, 30);
+            }
+            
+            function showResults() {
+                if (!selectedFamily || !resultsContainer) return;
+                
+                console.log('Показываем результаты для:', selectedFamilyName);
+                
+                resultsContainer.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-family">
+                            ${selectedFamilyEmoji} ${selectedFamilyName}
+                        </div>
+                        <h3 class="result-title">Идеальный состав грунта</h3>
+                        
+                        <div class="soil-components">
+                            ${selectedFamily.components.map(component => `
+                                <div class="component-item">
+                                    <div class="component-emoji">${component.emoji}</div>
+                                    <div class="component-content">
+                                        <div class="component-name">${component.name}</div>
+                                        <div class="component-percentage">${component.percentage}</div>
+                                        <div class="component-desc">${component.description}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="result-tips">
+                            <div class="tips-title">
+                                <i class="fas fa-lightbulb"></i>
+                                Советы по применению
+                            </div>
+                            <ul class="tips-list">
+                                ${selectedFamily.tips.map(tip => `
+                                    <li class="tip-item">
+                                        <i class="fas fa-check-circle tip-icon"></i>
+                                        <span>${tip}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function shareResult(platform) {
+                if (!selectedFamily) {
+                    showMessage('Нет данных для публикации', 'error');
+                    return;
+                }
+                
+                // ССЫЛКА НА МИНИ-АПП
+                const appUrl = 'https://t.me/PlantSurvivorbot/test';
+                const vkAppUrl = 'https://vk.com/appYOUR_APP_ID'; // ЗАМЕНИТЕ НА ID ВАШЕГО ПРИЛОЖЕНИЯ
+                
+                // Форматируем компоненты для текста
+                const componentsText = selectedFamily.components
+                    .map(c => `• ${c.name} - ${c.percentage}`)
+                    .join('\n');
+                
+                // Форматируем текст для шеринга
+                const shareText = `🌿 Грунтовед создал идеальный рецепт для ${selectedFamilyName}!\n\n` +
+                               `📋 Состав грунта:\n${componentsText}\n\n` +
+                               `💡 Советы:\n${selectedFamily.tips.map(t => `• ${t}`).join('\n')}\n\n` +
+                               `Создайте свой рецепт грунта! 👇\n`;
+                
+                let shareUrl = '';
+                
+                switch(platform) {
+                    case 'vk':
+                        // Пытаемся использовать VK Bridge
+                        try {
+                            if (typeof vkBridge !== 'undefined') {
+                                vkBridge.send('VKWebAppShowShareBox', {
+                                    text: shareText,
+                                    link: vkAppUrl
+                                }).catch(() => {
+                                    // Fallback на обычный шеринг
+                                    shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Грунтовед&description=${encodeURIComponent(shareText)}&noparse=true`;
+                                    window.open(shareUrl, '_blank', 'width=600,height=500');
+                                });
+                                return;
+                            }
+                        } catch (e) {
+                            console.log('Ошибка VK шеринга');
+                        }
+                        
+                        shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Грунтовед&description=${encodeURIComponent(shareText)}&noparse=true`;
+                        break;
+                        
+                    case 'telegram':
+                        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(shareText + appUrl)}`;
+                        break;
+                }
+                
+                if (shareUrl) {
+                    // Открываем в новом окне
+                    const width = 600;
+                    const height = 500;
+                    const left = (window.innerWidth - width) / 2;
+                    const top = (window.innerHeight - height) / 2;
+                    
+                    window.open(shareUrl, '_blank', `width=${width},height=${height},top=${top},left=${left}`);
+                }
+            }
+            
+            function restartApp() {
+                console.log('Перезапуск приложения');
+                
+                // Сброс данных
+                selectedFamily = null;
+                selectedFamilyName = '';
+                selectedFamilyEmoji = '';
+                
+                // Сброс UI
+                document.querySelectorAll('.family-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                if (plantSearchInput) plantSearchInput.value = '';
+                if (searchResults) searchResults.classList.remove('active');
+                
+                // Переход к выбору
+                switchScreen(screens.results, screens.selection);
+            }
+            
+            function showMessage(text, type) {
+                // Создаем временное сообщение
+                const message = document.createElement('div');
+                message.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 12px;
+                    font-weight: 600;
+                    z-index: 1000;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    animation: fadeIn 0.3s ease;
+                `;
+                message.textContent = text;
+                document.body.appendChild(message);
+                
+                // Удаляем через 3 секунды
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    message.style.transition = 'opacity 0.3s';
+                    setTimeout(() => {
+                        if (message.parentNode) {
+                            message.parentNode.removeChild(message);
+                        }
+                    }, 300);
+                }, 3000);
+            }
+            
+            console.log('Приложение инициализировано');
+        });
+    </script>
+</body>
+</html>
