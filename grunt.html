@@ -51,7 +51,7 @@
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 8px;
             font-family: 'Nunito', sans-serif;
@@ -59,6 +59,10 @@
             backdrop-filter: blur(5px);
             transition: all 0.3s;
             border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .vk-back-button.visible {
+            display: flex;
         }
         
         .vk-back-button:hover {
@@ -484,7 +488,7 @@
             text-align: center; 
         }
         
-        /* ЭКРАН РЕЗУЛЬТАТОВ */
+        /* ЭКРАН РЕЗУЛЬТАТОВ (ОБНОВЛЕННЫЙ) */
         #results-screen {
             padding: 30px 20px;
         }
@@ -701,11 +705,6 @@
             box-shadow: 0 4px 12px rgba(76, 117, 163, 0.3);
         }
         
-        .share-btn.tg { 
-            background: #0088cc; 
-            box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
-        }
-        
         .share-note {
             font-size: 14px;
             color: #666;
@@ -730,6 +729,10 @@
             transform: translateY(-2px);
         }
         
+        .bot-link i {
+            margin-right: 8px;
+        }
+        
         /* КНОПКИ ДЕЙСТВИЙ */
         .action-buttons {
             display: flex;
@@ -738,7 +741,7 @@
             margin-top: 30px;
         }
         
-        .btn-next, .btn-restart {
+        .btn-restart {
             padding: 16px;
             background: linear-gradient(135deg, #FF9800, #F57C00);
             color: white;
@@ -752,24 +755,16 @@
             justify-content: center;
             gap: 10px;
             transition: all 0.3s;
-            font-size: 17px;
         }
         
-        .btn-next:hover, .btn-restart:hover {
+        .btn-restart:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(255,152,0,0.4);
         }
         
-        .btn-next:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
         .btn-channel {
             padding: 16px;
-            background: linear-gradient(135deg, #0088cc, #006699);
+            background: #4C75A3;
             color: white;
             border: none;
             border-radius: 16px;
@@ -785,8 +780,13 @@
         }
         
         .btn-channel:hover {
+            background: #3A5B7A;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,136,204,0.4);
+            box-shadow: 0 6px 16px rgba(76,117,163,0.4);
+        }
+        
+        .btn-channel i {
+            font-size: 18px;
         }
         
         /* АДАПТАЦИЯ */
@@ -836,6 +836,16 @@
                 padding: 6px 12px;
                 font-size: 12px;
             }
+            
+            .btn-channel {
+                padding: 14px;
+                font-size: 14px;
+            }
+            
+            .bot-link {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
         }
         
         /* АНИМАЦИИ */
@@ -855,17 +865,24 @@
     // Инициализация VK Mini App
     try {
         if (typeof vkBridge !== 'undefined') {
-            vkBridge.send('VKWebAppInit');
-            console.log('VK Mini App инициализирован');
+            vkBridge.send('VKWebAppInit')
+                .then(() => {
+                    console.log('✅ VK Mini App инициализирован');
+                    // Показываем кнопку назад, если мы внутри VK
+                    if (window.location !== window.parent.location) {
+                        document.getElementById('vk-back-button').classList.add('visible');
+                    }
+                })
+                .catch(e => console.log('ℹ️ Не в VK окружении'));
         }
     } catch (e) {
-        console.log('Не в VK окружении');
+        console.log('Ошибка VK:', e);
     }
     </script>
 
     <div class="app-container">
         <!-- Кнопка назад для VK -->
-        <button class="vk-back-button" id="vk-back-button" style="display: none;">
+        <button class="vk-back-button" id="vk-back-button">
             <i class="fas fa-arrow-left"></i> Назад
         </button>
         
@@ -940,8 +957,6 @@
                     <!-- Кнопки семейств будут здесь -->
                 </div>
             </div>
-            
-            <!-- Кнопка удалена - теперь переход на прелодер автоматический -->
         </div>
         
         <!-- ЭКРАН 3: ОБРАБОТКИ -->
@@ -980,7 +995,7 @@
             </div>
         </div>
         
-        <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ -->
+        <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ (ОБНОВЛЕННЫЙ) -->
         <div class="screen" id="results-screen">
             <div class="results-header">
                 <div class="results-logo">🌱</div>
@@ -998,13 +1013,11 @@
                     <button class="share-btn vk" id="share-vk">
                         <i class="fab fa-vk"></i>
                     </button>
-                    <button class="share-btn tg" id="share-tg">
-                        <i class="fab fa-telegram"></i>
-                    </button>
+                    <!-- Кнопка Telegram удалена -->
                 </div>
-                <p class="share-note">Тест доступен в Telegram мини-приложении:</p>
-                <a href="https://t.me/PlantSurvivorbot/test" target="_blank" class="bot-link">
-                    <i class="fab fa-telegram"></i> Plant Survivor Mini App
+                <p class="share-note">Вернуться ко всем тестам:</p>
+                <a href="index.html" class="bot-link">
+                    <i class="fas fa-home"></i> На главную
                 </a>
             </div>
             
@@ -1012,15 +1025,28 @@
                 <button class="btn-restart" id="restart-btn">
                     <i class="fas fa-redo"></i> Новый рецепт
                 </button>
-                <a href="https://t.me/geyzerrr_A" target="_blank" class="btn-channel">
-                    <i class="fab fa-telegram"></i> Создано @geyzerrr
+                <a href="https://vk.com/geyzerrr_blog" target="_blank" class="btn-channel">
+                    <i class="fab fa-vk"></i> Создано Geyzerrr
                 </a>
             </div>
         </div>
     </div>
     
     <script>
-        // БАЗА ДАННЫХ РАСТЕНИЙ И СЕМЕЙСТВ (обновленная по семействва.txt)
+        // Кнопка назад
+        document.getElementById('vk-back-button').addEventListener('click', function() {
+            try {
+                if (typeof vkBridge !== 'undefined') {
+                    vkBridge.send('VKWebAppClose', { status: 'success' });
+                } else {
+                    window.history.back();
+                }
+            } catch (e) {
+                window.history.back();
+            }
+        });
+
+        // БАЗА ДАННЫХ РАСТЕНИЙ И СЕМЕЙСТВ
         const PLANT_DATABASE = {
             // Акантовые
             "кроссандра": { family: "Акантовые", emoji: "🌺" },
@@ -1274,7 +1300,7 @@
             "шалфей": { family: "Яснотковые", emoji: "🍃" }
         };
 
-        // БАЗА РЕЦЕПТОВ ГРУНТОВ ДЛЯ КАЖДОГО СЕМЕЙСТВА (упрощенная версия)
+        // БАЗА РЕЦЕПТОВ ГРУНТОВ
         const SOIL_RECIPES = {
             "Акантовые": {
                 components: [
@@ -1457,10 +1483,9 @@
                     "Регулярные подкормки в период роста"
                 ]
             }
-            // Для остальных семейств можно использовать универсальный рецепт
         };
 
-        // УНИВЕРСАЛЬНЫЙ РЕЦЕПТ ДЛЯ СЕМЕЙСТВ БЕЗ СПЕЦИФИЧЕСКОГО РЕЦЕПТА
+        // УНИВЕРСАЛЬНЫЙ РЕЦЕПТ
         const UNIVERSAL_RECIPE = {
             components: [
                 { emoji: "🌿", name: "Универсальный грунт", percentage: "50%", description: "Базовая питательная смесь" },
@@ -1492,12 +1517,10 @@
             const resultsContainer = document.getElementById('results-container');
             const restartBtn = document.getElementById('restart-btn');
             const shareVkBtn = document.getElementById('share-vk');
-            const shareTgBtn = document.getElementById('share-tg');
             const loaderStatus = document.getElementById('loader-status');
             const processingStatus = document.getElementById('processing-status');
             const processingProgress = document.getElementById('processing-progress');
             const loaderProgress = document.getElementById('loader-progress');
-            const vkBackButton = document.getElementById('vk-back-button');
             
             const steps = {
                 step1: document.getElementById('step1'),
@@ -1511,85 +1534,35 @@
             let selectedFamilyName = '';
             let selectedFamilyEmoji = '';
             
-            // УНИКАЛЬНЫЕ СЕМЕЙСТВА ИЗ БАЗЫ
+            // УНИКАЛЬНЫЕ СЕМЕЙСТВА
             const uniqueFamilies = [...new Set(Object.values(PLANT_DATABASE).map(p => p.family))].sort();
             const familyEmojis = {
-                "Акантовые": "🌺",
-                "Аизовые": "🪨",
-                "Амариллисовые": "🌺",
-                "Анакампсеровые": "🌿",
-                "Ароидные": "🍃",
-                "Аралиевые": "🌿",
-                "Асфоделовые": "🌵",
-                "Астровые": "🌼",
-                "Банановые": "🍌",
-                "Бегониевые": "🌺",
-                "Бигнониевые": "🌺",
-                "Бобовые": "🦋",
-                "Бромелиевые": "🌺",
-                "Виноградовые": "🍇",
-                "Гераниевые": "🌺",
-                "Геснериевые": "💜",
-                "Диоскорейные": "🌿",
-                "Кактусовые": "🌵",
-                "Кариковые": "🥭",
-                "Кипрейные": "🌸",
-                "Коммелиновые": "🌿",
-                "Крапивные": "🌿",
-                "Кутровые": "🌺",
-                "Ластовневые": "🌺",
-                "Мальвовые": "🌸",
-                "Марантовые": "🎯",
-                "Мареновые": "☕",
-                "Маслиновые": "🌸",
-                "Миртовые": "🌿",
-                "Многоножковые": "🌿",
-                "Молочайные": "🌵",
-                "Никтагиновые": "🌸",
-                "Норичниковые": "🌸",
-                "Орхидные": "🦋",
-                "Пальмовые": "🌴",
-                "Пасленовые": "🌸",
-                "Перечные": "🌿",
-                "Рутовые": "🍋",
-                "Саррацениевые": "🌿",
-                "Спаржевые": "🌿",
-                "Страстоцветные": "🌺",
-                "Толстянковые": "🪴",
-                "Тутовые": "🌳",
-                "Яснотковые": "🍃"
+                "Акантовые": "🌺", "Аизовые": "🪨", "Амариллисовые": "🌺",
+                "Анакампсеровые": "🌿", "Ароидные": "🍃", "Аралиевые": "🌿",
+                "Асфоделовые": "🌵", "Астровые": "🌼", "Банановые": "🍌",
+                "Бегониевые": "🌺", "Бигнониевые": "🌺", "Бобовые": "🦋",
+                "Бромелиевые": "🌺", "Виноградовые": "🍇", "Гераниевые": "🌺",
+                "Геснериевые": "💜", "Диоскорейные": "🌿", "Кактусовые": "🌵",
+                "Кариковые": "🥭", "Кипрейные": "🌸", "Коммелиновые": "🌿",
+                "Крапивные": "🌿", "Кутровые": "🌺", "Ластовневые": "🌺",
+                "Мальвовые": "🌸", "Марантовые": "🎯", "Мареновые": "☕",
+                "Маслиновые": "🌸", "Миртовые": "🌿", "Многоножковые": "🌿",
+                "Молочайные": "🌵", "Никтагиновые": "🌸", "Норичниковые": "🌸",
+                "Орхидные": "🦋", "Пальмовые": "🌴", "Пасленовые": "🌸",
+                "Перечные": "🌿", "Рутовые": "🍋", "Саррацениевые": "🌿",
+                "Спаржевые": "🌿", "Страстоцветные": "🌺", "Толстянковые": "🪴",
+                "Тутовые": "🌳", "Яснотковые": "🍃"
             };
-            
-            // ИНИЦИАЛИЗАЦИЯ VK
-            try {
-                if (vkBridge && window.location !== window.parent.location) {
-                    vkBackButton.style.display = 'flex';
-                    
-                    vkBackButton.addEventListener('click', function() {
-                        vkBridge.send('VKWebAppClose', { status: 'success' });
-                    });
-                }
-            } catch (e) {
-                console.log('Не удалось показать кнопку назад');
-            }
             
             // ИНИЦИАЛИЗАЦИЯ
             initApp();
             
             function initApp() {
-                // Автозапуск загрузки
                 startLoadingSequence();
-                
-                // Инициализация поиска
                 initSearch();
-                
-                // Инициализация выбора семейств
                 initFamilySelection();
-                
-                // Обработчики кнопок
                 restartBtn.addEventListener('click', restartApp);
-                shareVkBtn.addEventListener('click', () => shareResult('vk'));
-                shareTgBtn.addEventListener('click', () => shareResult('telegram'));
+                shareVkBtn.addEventListener('click', () => shareResult());
             }
             
             function startLoadingSequence() {
@@ -1612,7 +1585,6 @@
                     
                     if (progress >= 100) {
                         clearInterval(interval);
-                        // Переходим к выбору через небольшую задержку
                         setTimeout(() => {
                             switchScreen(screens.loading, screens.selection);
                         }, 500);
@@ -1621,7 +1593,6 @@
             }
             
             function switchScreen(fromScreen, toScreen) {
-                console.log(`Переключаем экран с ${fromScreen.id} на ${toScreen.id}`);
                 fromScreen.classList.remove('active');
                 toScreen.classList.add('active');
             }
@@ -1637,7 +1608,6 @@
                         return;
                     }
                     
-                    // Поиск совпадений
                     const matches = Object.entries(PLANT_DATABASE)
                         .filter(([plantName, plantData]) => 
                             plantName.includes(searchTerm) || 
@@ -1653,20 +1623,15 @@
                             </div>
                         `).join('');
                         
-                        // Добавляем обработчики клика
                         searchResults.querySelectorAll('.search-match').forEach(match => {
                             match.addEventListener('click', function() {
                                 const family = this.getAttribute('data-family');
                                 selectFamily(family);
                                 
-                                // Заполняем поле поиска названием растения
                                 const plantName = this.querySelector('.search-match-title').textContent;
                                 if (plantSearchInput) plantSearchInput.value = plantName;
-                                
-                                // Скрываем результаты
                                 if (searchResults) searchResults.classList.remove('active');
                                 
-                                // Автоматический переход на прелодер
                                 setTimeout(() => goToProcessing(), 500);
                             });
                         });
@@ -1683,7 +1648,6 @@
                     }
                 });
                 
-                // Скрываем результаты при клике вне
                 document.addEventListener('click', function(e) {
                     if (plantSearchInput && !plantSearchInput.contains(e.target) && 
                         searchResults && !searchResults.contains(e.target)) {
@@ -1695,7 +1659,6 @@
             function initFamilySelection() {
                 if (!familiesContainer) return;
                 
-                // Создаем кнопки для каждого семейства
                 familiesContainer.innerHTML = uniqueFamilies.map(family => {
                     const emoji = familyEmojis[family] || "🌱";
                     return `
@@ -1706,17 +1669,14 @@
                     `;
                 }).join('');
                 
-                // Добавляем обработчики клика
                 familiesContainer.querySelectorAll('.family-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const family = this.getAttribute('data-family');
                         selectFamily(family);
                         
-                        // Сбрасываем поиск
                         if (plantSearchInput) plantSearchInput.value = '';
                         if (searchResults) searchResults.classList.remove('active');
                         
-                        // Автоматический переход на прелодер
                         setTimeout(() => goToProcessing(), 500);
                     });
                 });
@@ -1725,18 +1685,15 @@
             function selectFamily(family) {
                 if (!family) return;
                 
-                // Снимаем выделение со всех кнопок
                 document.querySelectorAll('.family-btn').forEach(btn => {
                     btn.classList.remove('selected');
                 });
                 
-                // Выделяем выбранную кнопку
                 const selectedBtn = document.querySelector(`.family-btn[data-family="${family}"]`);
                 if (selectedBtn) {
                     selectedBtn.classList.add('selected');
                 }
                 
-                // Сохраняем выбранное семейство
                 selectedFamily = SOIL_RECIPES[family] || UNIVERSAL_RECIPE;
                 selectedFamilyName = family;
                 selectedFamilyEmoji = familyEmojis[family] || "🌱";
@@ -1748,12 +1705,7 @@
                     return;
                 }
                 
-                console.log('Переход к обработке для семейства:', selectedFamilyName);
-                
-                // Переходим к экрану обработки
                 switchScreen(screens.selection, screens.processing);
-                
-                // Запускаем обработку с прогресс-баром
                 startProcessingSequence();
             }
             
@@ -1761,7 +1713,6 @@
                 let progress = 0;
                 if (processingProgress) processingProgress.style.width = '0%';
                 
-                // Сброс шагов
                 Object.values(steps).forEach(step => {
                     if (step) {
                         step.classList.remove('active');
@@ -1774,7 +1725,6 @@
                     progress += 1;
                     if (processingProgress) processingProgress.style.width = `${progress}%`;
                     
-                    // Обновляем шаги
                     if (progress >= 25 && steps.step1) {
                         steps.step1.classList.add('active');
                         if (processingStatus) processingStatus.textContent = "Анализируем семейство...";
@@ -1797,9 +1747,7 @@
                     if (progress >= 100) {
                         clearInterval(interval);
                         
-                        // Переходим к результатам через 1 секунду
                         setTimeout(() => {
-                            console.log('Переход к результатам');
                             switchScreen(screens.processing, screens.results);
                             showResults();
                         }, 1000);
@@ -1809,8 +1757,6 @@
             
             function showResults() {
                 if (!selectedFamily || !resultsContainer) return;
-                
-                console.log('Показываем результаты для:', selectedFamilyName);
                 
                 resultsContainer.innerHTML = `
                     <div class="result-card">
@@ -1850,88 +1796,58 @@
                 `;
             }
             
-            function shareResult(platform) {
+            // ОБНОВЛЕННАЯ ФУНКЦИЯ ШЕРИНГА (только VK)
+            function shareResult() {
                 if (!selectedFamily) {
                     showMessage('Нет данных для публикации', 'error');
                     return;
                 }
                 
-                // ССЫЛКА НА МИНИ-АПП
-                const appUrl = 'https://t.me/PlantSurvivorbot/test';
-                const vkAppUrl = 'https://vk.com/app54467162'; // ЗАМЕНИТЕ НА ID ВАШЕГО ПРИЛОЖЕНИЯ
+                const vkAppUrl = 'https://vk.com/app54467162';
                 
-                // Форматируем компоненты для текста
                 const componentsText = selectedFamily.components
                     .map(c => `• ${c.name} - ${c.percentage}`)
                     .join('\n');
                 
-                // Форматируем текст для шеринга
                 const shareText = `🌿 Грунтовед создал идеальный рецепт для ${selectedFamilyName}!\n\n` +
                                `📋 Состав грунта:\n${componentsText}\n\n` +
                                `💡 Советы:\n${selectedFamily.tips.map(t => `• ${t}`).join('\n')}\n\n` +
                                `Создайте свой рецепт грунта! 👇\n`;
                 
-                let shareUrl = '';
-                
-                switch(platform) {
-                    case 'vk':
-                        // Пытаемся использовать VK Bridge
-                        try {
-                            if (typeof vkBridge !== 'undefined') {
-                                vkBridge.send('VKWebAppShowShareBox', {
-                                    text: shareText,
-                                    link: vkAppUrl
-                                }).catch(() => {
-                                    // Fallback на обычный шеринг
-                                    shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Грунтовед&description=${encodeURIComponent(shareText)}&noparse=true`;
-                                    window.open(shareUrl, '_blank', 'width=600,height=500');
-                                });
-                                return;
-                            }
-                        } catch (e) {
-                            console.log('Ошибка VK шеринга');
-                        }
-                        
-                        shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Грунтовед&description=${encodeURIComponent(shareText)}&noparse=true`;
-                        break;
-                        
-                    case 'telegram':
-                        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(shareText + appUrl)}`;
-                        break;
-                }
-                
-                if (shareUrl) {
-                    // Открываем в новом окне
-                    const width = 600;
-                    const height = 500;
-                    const left = (window.innerWidth - width) / 2;
-                    const top = (window.innerHeight - height) / 2;
-                    
-                    window.open(shareUrl, '_blank', `width=${width},height=${height},top=${top},left=${left}`);
+                try {
+                    if (typeof vkBridge !== 'undefined') {
+                        vkBridge.send('VKWebAppShowShareBox', {
+                            text: shareText,
+                            link: vkAppUrl
+                        }).catch(() => {
+                            const shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Грунтовед&description=${encodeURIComponent(shareText)}&noparse=true`;
+                            window.open(shareUrl, '_blank', 'width=600,height=500');
+                        });
+                    } else {
+                        const shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Грунтовед&description=${encodeURIComponent(shareText)}&noparse=true`;
+                        window.open(shareUrl, '_blank', 'width=600,height=500');
+                    }
+                } catch (e) {
+                    console.error('Ошибка шеринга:', e);
+                    showMessage('Не удалось поделиться результатом', 'error');
                 }
             }
             
             function restartApp() {
-                console.log('Перезапуск приложения');
-                
-                // Сброс данных
                 selectedFamily = null;
                 selectedFamilyName = '';
                 selectedFamilyEmoji = '';
                 
-                // Сброс UI
                 document.querySelectorAll('.family-btn').forEach(btn => {
                     btn.classList.remove('selected');
                 });
                 if (plantSearchInput) plantSearchInput.value = '';
                 if (searchResults) searchResults.classList.remove('active');
                 
-                // Переход к выбору
                 switchScreen(screens.results, screens.selection);
             }
             
             function showMessage(text, type) {
-                // Создаем временное сообщение
                 const message = document.createElement('div');
                 message.style.cssText = `
                     position: fixed;
@@ -1950,7 +1866,6 @@
                 message.textContent = text;
                 document.body.appendChild(message);
                 
-                // Удаляем через 3 секунды
                 setTimeout(() => {
                     message.style.opacity = '0';
                     message.style.transition = 'opacity 0.3s';
@@ -1962,7 +1877,7 @@
                 }, 3000);
             }
             
-            console.log('Приложение инициализировано');
+            console.log('Грунтовед инициализирован');
         });
     </script>
 </body>
