@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Удобрятор 🌱</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- VK Bridge для интеграции с VK Mini Apps -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    
+    <style>
+        /* ... существующие стили ... */
+        
+        /* Добавить в конец */
+        .vk-back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1100;
+            background: rgba(26, 35, 126, 0.2);
+            border: none;
+            color: #1a237e;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+        }
+        
+        .vk-back-button:hover {
+            background: rgba(26, 35, 126, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <script>
+    // Инициализация VK Mini App
+    try {
+        vkBridge.send('VKWebAppInit');
+        console.log('VK Mini App инициализирован');
+    } catch (e) {
+        console.log('Не в VK окружении');
+    }
+    </script>
+
+    <div class="app-container">
+        <!-- Кнопка назад для VK -->
+        <button class="vk-back-button" id="vk-back-button" style="display: none;">
+            <i class="fas fa-arrow-left"></i> Назад
+        </button>
+        
+        <!-- ... все существующие экраны ... -->
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // VK Back Button
+        const vkBackButton = document.getElementById('vk-back-button');
+        
+        try {
+            if (vkBridge && window.location !== window.parent.location) {
+                vkBackButton.style.display = 'flex';
+                
+                vkBackButton.addEventListener('click', function() {
+                    vkBridge.send('VKWebAppClose', { status: 'success' });
+                });
+            }
+        } catch (e) {}
+        
+        // ... остальной существующий код ...
+        
+        // Модифицируем функцию shareResult для поддержки VK
+        const originalShareResult = shareResult;
+        window.shareResult = function(platform) {
+            const appUrl = 'https://t.me/PlantSurvivorbot/test'; // для Telegram
+            const vkAppUrl = 'https://vk.com/appYOUR_APP_ID'; // ЗАМЕНИТЕ на ID вашего приложения
+            
+            const getPlantTypeName = (type) => {
+                const names = {
+                    'цветущее': 'Цветущие растения',
+                    'декоративнолиственное': 'Декоративно-лиственные',
+                    'кактусы': 'Кактусы и суккуленты',
+                    'орхидеи': 'Орхидеи',
+                    'зелень': 'Зелень и травы',
+                    'пальмы': 'Пальмы и драцены',
+                    'цитрусовые': 'Цитрусовые'
+                };
+                return names[type] || type;
+            };
+            
+            const getGoalName = (goal) => {
+                const names = {
+                    'рост': 'Для роста',
+                    'цветение': 'Для цветения',
+                    'корни': 'Для корней',
+                    'иммунитет': 'Для иммунитета',
+                    'листья': 'Для листьев',
+                    'здоровье': 'Для общего здоровья'
+                };
+                return names[goal] || goal;
+            };
+            
+            const getSeasonName = (season) => {
+                const names = {
+                    'весна': 'Весна',
+                    'лето': 'Лето',
+                    'осень': 'Осень',
+                    'зима': 'Зима'
+                };
+                return names[season] || season;
+            };
+            
+            const fertilizers = FERTILIZERS[userAnswers.plantType]?.[userAnswers.goal] || 
+                               [{name: "Универсальное удобрение", dosage: "1 мл на 1 л воды", method: "под корень"}];
+            const fertilizer = fertilizers[0];
+            
+            const shareText = `🧪 Удобрятор подобрал мне схему подкормки!\n\n` +
+                           `🌿 ${getPlantTypeName(userAnswers.plantType)}\n` +
+                           `🎯 ${getGoalName(userAnswers.goal)}\n` +
+                           `📅 ${getSeasonName(userAnswers.season)}\n` +
+                           `💧 ${fertilizer.name}: ${fertilizer.dosage}\n\n` +
+                           `Составь свою схему! 👇\n`;
+            
+            let shareUrl = '';
+            
+            if (platform === 'vk') {
+                shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(vkAppUrl)}&title=Удобрятор&description=${encodeURIComponent(shareText)}&noparse=true`;
+            } else if (platform === 'telegram') {
+                shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appUrl)}&text=${encodeURIComponent(shareText + appUrl)}`;
+            }
+            
+            if (shareUrl) {
+                try {
+                    vkBridge.send('VKWebAppShowShareBox', {
+                        text: shareText,
+                        link: platform === 'vk' ? vkAppUrl : appUrl
+                    }).catch(() => {
+                        // Fallback: открываем в новом окне
+                        const width = 600;
+                        const height = 500;
+                        const left = (window.innerWidth - width) / 2;
+                        const top = (window.innerHeight - height) / 2;
+                        window.open(shareUrl, '_blank', `width=${width},height=${height},top=${top},left=${left}`);
+                    });
+                } catch (e) {
+                    window.open(shareUrl, '_blank');
+                }
+            }
+        };
+        
+        // Переопределяем функцию
+        shareResult = window.shareResult;
+    });
+    </script>
+</body>
+</html>
